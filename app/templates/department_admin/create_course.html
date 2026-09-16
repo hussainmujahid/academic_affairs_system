@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-plus-circle"></i> Create New Course</h1>
+    <a href="{{ url_for('dept_admin.manage_courses') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Courses
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">Course Code *</label>
+                <input type="text" name="course_code" class="form-control" placeholder="e.g., CS101" required>
+                <small class="text-muted">Must be unique</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Course Title *</label>
+                <input type="text" name="title" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Credits *</label>
+                <input type="number" name="credits" class="form-control" min="1" max="6" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="alert alert-info">
+                <strong>Department:</strong> {{ department.department_name }}
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg px-5">
+                    <i class="fas fa-save"></i> Create Course
+                </button>
+                <a href="{{ url_for('dept_admin.manage_courses') }}" class="btn btn-secondary btn-lg px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

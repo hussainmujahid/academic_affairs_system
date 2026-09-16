@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-grade"></i> Enter Grades: 
+        {{ section.course.course_code }} - {{ section.course.title }}
+        <small class="text-muted">Section {{ section.section_number }}</small>
+    </h1>
+    <div>
+        <a href="{{ url_for('teacher.export_grades', section_id=section.section_id) }}" class="btn btn-secondary">
+            <i class="fas fa-file-csv"></i> Export CSV
+        </a>
+        <a href="{{ url_for('teacher.section_roster', section_id=section.section_id) }}" class="btn btn-primary">
+            <i class="fas fa-users"></i> Back to Roster
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-calculator"></i> Grade Entry (Regular: 30%, Final: 70%)
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('teacher.save_grades', section_id=section.section_id) }}" id="gradesForm">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered" id="gradesTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Student ID</th>
+                            <th>Student Name</th>
+                            <th>Student Number</th>
+                            <th>Regular Grade (30%)</th>
+                            <th>Final Grade (70%)</th>
+                            <th>Overall Grade</th>
+                            <th>Letter Grade</th>
+                            <th>Status</th>
+                        </thead>
+                    </thead>
+                    <tbody>
+                        {% for reg in registrations %}
+                        <tr id="row-{{ reg.registration_id }}">
+                            <td class="text-center">{{ loop.index }}</td>
+                            <td>{{ reg.student.student_id }}</td>
+                            <td><strong>{{ reg.student.user.full_name }}</strong></td>
+                            <td>{{ reg.student.student_number }}</td>
+                            <td>
+                                <input type="number" 
+                                       name="regular_grade_{{ reg.registration_id }}" 
+                                       class="form-control grade-input regular-grade" 
+                                       value="{{ reg.regular_grade or '' }}"
+                                       step="0.5" 
+                                       min="0" 
+                                       max="100"
+                                       data-reg-id="{{ reg.registration_id }}"
+                                       style="width: 100px;">
+                            </td>
+                            <td>
+                                <input type="number" 
+                                       name="final_grade_{{ reg.registration_id }}" 
+                                       class="form-control grade-input final-grade" 
+                                       value="{{ reg.final_grade or '' }}"
+                                       step="0.5" 
+                                       min="0" 
+                                       max="100"
+                                       data-reg-id="{{ reg.registration_id }}"
+                                       style="width: 100px;">
+                            </td>
+                            <td class="overall-grade-cell" id="overall_{{ reg.registration_id }}">
+                                <span class="fw-bold overall-value">{{ reg.grade or '--' }}</span>
+                            </td>
+                            <td class="letter-grade-cell" id="letter_{{ reg.registration_id }}">
+                                <span class="badge letter-badge">
+                                    {% if reg.grade %}
+                                        {% if reg.grade >= 90 %}A
+                                        {% elif reg.grade >= 80 %}B
+                                        {% elif reg.grade >= 70 %}C
+                                        {% elif reg.grade >= 60 %}D
+                                        {% else %}F
+                                        {% endif %}
+                                    {% else %}--
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <select name="status_{{ reg.registration_id }}" class="form-select status-select" style="width: 120px;">
+                                    <option value="enrolled" {% if reg.status == 'enrolled' %}selected{% endif %}>Enrolled</option>
+                                    <option value="completed" {% if reg.status == 'completed' %}selected{% endif %}>Completed</option>
+                                    <option value="dropped" {% if reg.status == 'dropped' %}selected{% endif %}>Dropped</option>
+                                </select>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center">No students enrolled</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="text-center mt-3">
+                <button type="submit" class="btn btn-primary btn-lg px-5">
+                    <i class="fas fa-save"></i> Save All Grades
+                </button>
+                <button type="button" class="btn btn-secondary btn-lg px-4" onclick="resetGrades()">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+                <button type="button" class="btn btn-success btn-lg px-4" onclick="calculateAllGrades()">
+                    <i class="fas fa-calculator"></i> Calculate All
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Grade Statistics -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Grade Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="gradeChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line"></i> Class Statistics</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th>Class Average:</th>
+                        <td id="classAverage">--</td>
+                    </tr>
+                    <tr>
+                        <th>Highest Grade:</th>
+                        <td id="highestGrade">--</td>
+                    </tr>
+                    <tr>
+                        <th>Lowest Grade:</th>
+                        <td id="lowestGrade">--</td>
+                    </tr>
+                    <tr>
+                        <th>Passing Rate (≥60):</th>
+                        <td id="passingRate">--</td>
+                    </tr>
+                    <tr>
+                        <th>Total Students:</th>
+                        <td id="totalStudents">{{ registrations|length }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const REGULAR_WEIGHT = 0.3;
+const FINAL_WEIGHT = 0.7;
+
+function calculateOverallGrade(registrationId) {
+    const regularInput = document.querySelector(`input[name="regular_grade_${registrationId}"]`);
+    const finalInput = document.querySelector(`input[name="final_grade_${registrationId}"]`);
+    const overallSpan = document.getElementById(`overall_${registrationId}`);
+    const letterSpan = document.getElementById(`letter_${registrationId}`);
+    
+    if (!regularInput || !finalInput) return;
+    
+    let regular = parseFloat(regularInput.value) || 0;
+    let final = parseFloat(finalInput.value) || 0;
+    
+    const overall = (regular * REGULAR_WEIGHT) + (final * FINAL_WEIGHT);
+    const overallRounded = overall.toFixed(2);
+    
+    overallSpan.innerHTML = `<span class="fw-bold overall-value">${overallRounded}</span>`;
+    
+    // Calculate letter grade
+    let letter = '--';
+    let badgeClass = 'bg-secondary';
+    
+    if (overall >= 90) {
+        letter = 'A';
+        badgeClass = 'bg-success';
+    } else if (overall >= 80) {
+        letter = 'B';
+        badgeClass = 'bg-primary';
+    } else if (overall >= 70) {
+        letter = 'C';
+        badgeClass = 'bg-info';
+    } else if (overall >= 60) {
+        letter = 'D';
+        badgeClass = 'bg-warning';
+    } else if (overall > 0) {
+        letter = 'F';
+        badgeClass = 'bg-danger';
+    }
+    
+    letterSpan.innerHTML = `<span class="badge ${badgeClass}">${letter}</span>`;
+    
+    // Highlight row based on grade
+    const row = document.getElementById(`row-${registrationId}`);
+    if (row) {
+        if (overall >= 90) {
+            row.style.backgroundColor = '#d4edda';
+        } else if (overall >= 70) {
+            row.style.backgroundColor = '#d1ecf1';
+        } else if (overall < 60 && overall > 0) {
+            row.style.backgroundColor = '#f8d7da';
+        } else {
+            row.style.backgroundColor = '';
+        }
+    }
+    
+    updateStatistics();
+}
+
+function calculateAllGrades() {
+    const regularInputs = document.querySelectorAll('.regular-grade');
+    regularInputs.forEach(input => {
+        const regId = input.getAttribute('data-reg-id');
+        if (regId) {
+            calculateOverallGrade(regId);
+        }
+    });
+}
+
+function updateStatistics() {
+    let grades = [];
+    const overallSpans = document.querySelectorAll('.overall-value');
+    
+    overallSpans.forEach(span => {
+        const val = parseFloat(span.textContent);
+        if (!isNaN(val) && val > 0) {
+            grades.push(val);
+        }
+    });
+    
+    if (grades.length === 0) {
+        document.getElementById('classAverage').textContent = '--';
+        document.getElementById('highestGrade').textContent = '--';
+        document.getElementById('lowestGrade').textContent = '--';
+        document.getElementById('passingRate').textContent = '--';
+        return;
+    }
+    
+    const sum = grades.reduce((a, b) => a + b, 0);
+    const average = sum / grades.length;
+    const highest = Math.max(...grades);
+    const lowest = Math.min(...grades);
+    const passing = grades.filter(g => g >= 60).length;
+    const passingRate = (passing / grades.length * 100).toFixed(1);
+    
+    document.getElementById('classAverage').textContent = average.toFixed(2);
+    document.getElementById('highestGrade').textContent = highest.toFixed(2);
+    document.getElementById('lowestGrade').textContent = lowest.toFixed(2);
+    document.getElementById('passingRate').textContent = passingRate + '%';
+    
+    // Update chart
+    updateGradeChart(grades);
+}
+
+function updateGradeChart(grades) {
+    const ctx = document.getElementById('gradeChart').getContext('2d');
+    const aCount = grades.filter(g => g >= 90).length;
+    const bCount = grades.filter(g => g >= 80 && g < 90).length;
+    const cCount = grades.filter(g => g >= 70 && g < 80).length;
+    const dCount = grades.filter(g => g >= 60 && g < 70).length;
+    const fCount = grades.filter(g => g < 60).length;
+    
+    if (window.gradeChart) {
+        window.gradeChart.destroy();
+    }
+    
+    window.gradeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['A (90-100)', 'B (80-89)', 'C (70-79)', 'D (60-69)', 'F (<60)'],
+            datasets: [{
+                label: 'Number of Students',
+                data: [aCount, bCount, cCount, dCount, fCount],
+                backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Number of Students' }
+                }
+            }
+        }
+    });
+}
+
+function resetGrades() {
+    if (confirm('Reset all grades? This will clear all unsaved changes.')) {
+        location.reload();
+    }
+}
+
+// Add event listeners
+document.querySelectorAll('.regular-grade, .final-grade').forEach(input => {
+    input.addEventListener('input', function() {
+        const regId = this.getAttribute('data-reg-id');
+        if (regId) {
+            calculateOverallGrade(regId);
+        }
+    });
+});
+
+// Auto-save warning
+let formChanged = false;
+document.querySelectorAll('.regular-grade, .final-grade, .status-select').forEach(el => {
+    el.addEventListener('change', () => { formChanged = true; });
+});
+
+window.addEventListener('beforeunload', (e) => {
+    if (formChanged) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+    }
+});
+
+// Initial calculation
+calculateAllGrades();
+</script>
+
+<style>
+.grade-input {
+    text-align: center;
+}
+.grade-input:focus {
+    background-color: #fff3cd;
+}
+#gradesTable td {
+    vertical-align: middle;
+}
+.overall-grade-cell {
+    font-weight: bold;
+    text-align: center;
+}
+.letter-grade-cell {
+    text-align: center;
+}
+</style>
+{% endblock %}

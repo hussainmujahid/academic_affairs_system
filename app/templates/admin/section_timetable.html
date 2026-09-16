@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="fas fa-calendar-alt"></i> Section Timetable</h1>
+        <p class="text-muted">
+            {{ section.course.course_code }} - {{ section.course.title }} (Section {{ section.section_number }})
+        </p>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.manage_sections') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Sections
+        </a>
+        <a href="{{ url_for('admin.manage_timetables') }}" class="btn btn-primary">
+            <i class="fas fa-clock"></i> Manage All Timetables
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="fas fa-clock"></i> Weekly Schedule</h5>
+    </div>
+    <div class="card-body">
+        {% if timetables %}
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 15%">Time / Day</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set time_slots = [
+                        '08:00-09:30', '09:30-11:00', '11:00-12:30', 
+                        '12:30-14:00', '14:00-15:30', '15:30-17:00', '17:00-18:30'
+                    ] %}
+                    {% for time_slot in time_slots %}
+                    <tr>
+                        <td class="bg-light fw-bold">{{ time_slot }}</td>
+                        {% for day in range(5) %}
+                        <td>
+                            {% for tt in timetables %}
+                                {% if tt.day_of_week == day %}
+                                    {% set slot_start = tt.start_time.strftime('%H:%M') %}
+                                    {% set slot_end = tt.end_time.strftime('%H:%M') %}
+                                    {% set slot_range = slot_start + '-' + slot_end %}
+                                    {% if slot_range == time_slot or (slot_start >= time_slot.split('-')[0] and slot_start < time_slot.split('-')[1]) %}
+                                        <div class="border rounded p-2 mb-1 bg-info bg-opacity-10">
+                                            <strong>{{ tt.classroom.room_number if tt.classroom else 'TBA' }}</strong><br>
+                                            <small>{{ tt.start_time.strftime('%H:%M') }} - {{ tt.end_time.strftime('%H:%M') }}</small>
+                                            {% if tt.week_pattern != 'weekly' %}
+                                                <br><small class="text-muted">({{ tt.week_pattern }})</small>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-warning text-center">
+            <i class="fas fa-exclamation-triangle"></i> No timetable entries for this section.
+            <a href="{{ url_for('admin.manage_timetables') }}" class="alert-link">Add timetable entries</a>.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Section Details Card -->
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Section Details</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>Teacher:</strong><br>
+                {{ section.teacher.user.full_name if section.teacher and section.teacher.user else 'Not Assigned' }}
+            </div>
+            <div class="col-md-3">
+                <strong>Capacity:</strong><br>
+                {{ section.enrolled_count }} / {{ section.capacity }}
+            </div>
+            <div class="col-md-3">
+                <strong>Semester:</strong><br>
+                {{ section.semester.semester_name if section.semester else '-' }} {{ section.semester.year if section.semester else '' }}
+            </div>
+            <div class="col-md-3">
+                <strong>Status:</strong><br>
+                <span class="badge {% if section.status == 'open' %}bg-success{% elif section.status == 'closed' %}bg-danger{% else %}bg-warning{% endif %}">
+                    {{ section.status|upper }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table-bordered td, .table-bordered th {
+    vertical-align: top;
+    min-height: 80px;
+}
+.table-bordered td {
+    height: 80px;
+}
+.bg-opacity-10 {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-book-open"></i> Available Courses</h1>
+    <div>
+        <span class="badge bg-info fs-6">Active Semester: {{ active_semester.semester_name if active_semester else 'N/A' }}</span>
+        {% if active_window %}
+        <span class="badge bg-success fs-6 ms-2">Registration Open</span>
+        {% else %}
+        <span class="badge bg-danger fs-6 ms-2">Registration Closed</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    {% for section in sections %}
+    {% set timetables = section.timetables %}
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">{{ section.course.course_code }} - {{ section.course.title }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <small class="text-muted">Credits:</small>
+                        <strong>{{ section.course.credits }}</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Section:</small>
+                        <strong>{{ section.section_number }}</strong>
+                    </div>
+                </div>
+                
+                <!-- Schedule from Timetable -->
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <small class="text-muted">Schedule:</small>
+                        {% if timetables %}
+                            {% for tt in timetables %}
+                                <strong class="d-block">
+                                    {% if tt.day_of_week == 0 %}Mon
+                                    {% elif tt.day_of_week == 1 %}Tue
+                                    {% elif tt.day_of_week == 2 %}Wed
+                                    {% elif tt.day_of_week == 3 %}Thu
+                                    {% elif tt.day_of_week == 4 %}Fri
+                                    {% endif %}
+                                    {{ tt.start_time.strftime('%H:%M') }}-{{ tt.end_time.strftime('%H:%M') }}
+                                </strong>
+                            {% endfor %}
+                        {% else %}
+                            <strong class="text-muted">TBD</strong>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Room:</small>
+                        {% if timetables %}
+                            {% for tt in timetables %}
+                                <strong class="d-block">{{ tt.classroom.room_number if tt.classroom else 'TBA' }}</strong>
+                            {% endfor %}
+                        {% else %}
+                            <strong class="text-muted">TBA</strong>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <small class="text-muted">Instructor:</small>
+                        <strong>{{ section.teacher.user.full_name if section.teacher else 'TBA' }}</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Seats Available:</small>
+                        <strong class="{% if section.capacity - section.enrolled_count <= 5 %}text-danger{% else %}text-success{% endif %}">
+                            {{ section.capacity - section.enrolled_count }}/{{ section.capacity }}
+                        </strong>
+                    </div>
+                </div>
+                
+                {% if section.course.description %}
+                <p class="mt-2"><small>{{ section.course.description[:100] }}{% if section.course.description|length > 100 %}...{% endif %}</small></p>
+                {% endif %}
+                
+               <!-- Progress bar for capacity -->
+<div class="progress mb-3" style="height: 8px;">
+    {% set utilization = (section.enrolled_count / section.capacity * 100)|round %}
+    <div class="progress-bar {% if utilization >= 90 %}bg-danger{% elif utilization >= 70 %}bg-warning{% else %}bg-success{% endif %}" 
+         data-width="{{ utilization }}"
+         role="progressbar">
+    </div>
+</div>
+                
+                <!-- Prerequisite Check - Removed since Prerequisite table is gone -->
+                {% if section.course.course_id in completed_course_ids %}
+                    <div class="alert alert-success py-1 mb-2">
+                        <small><i class="fas fa-check-circle"></i> You have completed the prerequisite</small>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <form method="POST" action="{{ url_for('student.register_course', section_id=section.section_id) }}">
+                    <button type="submit" class="btn btn-success w-100" 
+                            {% if section.enrolled_count >= section.capacity or not active_window %}disabled{% endif %}>
+                        <i class="fas fa-plus-circle"></i> 
+                        {% if section.enrolled_count >= section.capacity %}
+                            Course Full
+                        {% elif not active_window %}
+                            Registration Closed
+                        {% else %}
+                            Register Now
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i> No available courses for registration at this time.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

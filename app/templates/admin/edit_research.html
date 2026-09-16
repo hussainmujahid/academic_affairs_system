@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit"></i> Edit Research: {{ research.title }}</h1>
+    <a href="{{ url_for('admin.manage_plan_research', plan_id=research.plan_id) }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Research
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">Research Details</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="title" class="form-label">Research Title *</label>
+                <input type="text" class="form-control" id="title" name="title" value="{{ research.title }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="research_type" class="form-label">Research Type</label>
+                <select class="form-select" id="research_type" name="research_type">
+                    <option value="">-- Select Type --</option>
+                    <option value="thesis" {% if research.research_type == 'thesis' %}selected{% endif %}>Thesis</option>
+                    <option value="capstone" {% if research.research_type == 'capstone' %}selected{% endif %}>Capstone Project</option>
+                    <option value="paper" {% if research.research_type == 'paper' %}selected{% endif %}>Research Paper</option>
+                    <option value="dissertation" {% if research.research_type == 'dissertation' %}selected{% endif %}>Dissertation</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="4">{{ research.description or '' }}</textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="supervisor_id" class="form-label">Supervisor</label>
+                    <select class="form-select" id="supervisor_id" name="supervisor_id">
+                        <option value="">-- Select Supervisor --</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.teacher_id }}" {% if research.supervisor_id == teacher.teacher_id %}selected{% endif %}>
+                            {{ teacher.user.full_name }} ({{ teacher.title }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="proposed" {% if research.status == 'proposed' %}selected{% endif %}>Proposed</option>
+                        <option value="approved" {% if research.status == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="in_progress" {% if research.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="completed" {% if research.status == 'completed' %}selected{% endif %}>Completed</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ research.start_date.strftime('%Y-%m-%d') if research.start_date else '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ research.end_date.strftime('%Y-%m-%d') if research.end_date else '' }}">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="grade" class="form-label">Grade (0-100)</label>
+                    <input type="number" step="0.01" class="form-control" id="grade" name="grade" value="{{ research.grade or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="submission_date" class="form-label">Submission Date</label>
+                    <input type="date" class="form-control" id="submission_date" name="submission_date" value="{{ research.submission_date.strftime('%Y-%m-%d') if research.submission_date else '' }}">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="{{ url_for('admin.manage_plan_research', plan_id=research.plan_id) }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

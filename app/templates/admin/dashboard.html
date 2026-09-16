@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+    <button class="btn btn-outline-secondary" onclick="window.print()">
+        <i class="fas fa-print"></i> Print Report
+    </button>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Total Users</h6>
+                        <h2 class="mb-0">{{ stats.total_users }}</h2>
+                    </div>
+                    <i class="fas fa-users fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Students</h6>
+                        <h2 class="mb-0">{{ stats.total_students }}</h2>
+                    </div>
+                    <i class="fas fa-user-graduate fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Teachers</h6>
+                        <h2 class="mb-0">{{ stats.total_teachers }}</h2>
+                    </div>
+                    <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Departments</h6>
+                        <h2 class="mb-0">{{ stats.total_departments }}</h2>
+                    </div>
+                    <i class="fas fa-building fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-dark text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Courses</h6>
+                        <h2 class="mb-0">{{ stats.total_courses }}</h2>
+                    </div>
+                    <i class="fas fa-book fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Sections</h6>
+                        <h2 class="mb-0">{{ stats.total_sections }}</h2>
+                    </div>
+                    <i class="fas fa-layer-group fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Registrations</h6>
+                        <h2 class="mb-0">{{ stats.total_registrations }}</h2>
+                    </div>
+                    <i class="fas fa-address-card fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Active Semester</h6>
+                        <h4 class="mb-0">{{ stats.active_semester.semester_name if stats.active_semester else 'None' }}</h4>
+                    </div>
+                    <i class="fas fa-calendar-alt fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Stats Row -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Majors</h6>
+                        <h2 class="mb-0">{{ stats.total_majors|default(0) }}</h2>
+                    </div>
+                    <i class="fas fa-graduation-cap fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Classrooms</h6>
+                        <h2 class="mb-0">{{ stats.total_classrooms|default(0) }}</h2>
+                    </div>
+                    <i class="fas fa-door-open fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Study Plans</h6>
+                        <h2 class="mb-0">{{ stats.total_study_plans|default(0) }}</h2>
+                    </div>
+                    <i class="fas fa-calendar-check fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Timetables</h6>
+                        <h2 class="mb-0">{{ stats.total_timetables|default(0) }}</h2>
+                    </div>
+                    <i class="fas fa-clock fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Management Cards -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-cogs"></i> Management</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-3x text-primary mb-2"></i>
+                                <h5 class="card-title">User Management</h5>
+                                <p class="card-text small">Create, edit, and manage all users</p>
+                                <a href="{{ url_for('admin.manage_users') }}" class="btn btn-primary btn-sm">Go to Users</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-building fa-3x text-success mb-2"></i>
+                                <h5 class="card-title">Departments</h5>
+                                <p class="card-text small">Manage academic departments</p>
+                                <a href="{{ url_for('admin.manage_departments') }}" class="btn btn-success btn-sm">Go to Departments</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-graduation-cap fa-3x text-info mb-2"></i>
+                                <h5 class="card-title">Majors</h5>
+                                <p class="card-text small">Manage academic majors/programs</p>
+                                <a href="{{ url_for('admin.manage_majors') }}" class="btn btn-info btn-sm text-white">Go to Majors</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-book fa-3x text-warning mb-2"></i>
+                                <h5 class="card-title">Courses</h5>
+                                <p class="card-text small">Manage course catalog</p>
+                                <a href="{{ url_for('admin.manage_courses') }}" class="btn btn-warning btn-sm">Go to Courses</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-layer-group fa-3x text-secondary mb-2"></i>
+                                <h5 class="card-title">Sections</h5>
+                                <p class="card-text small">Manage course sections</p>
+                                <a href="{{ url_for('admin.manage_sections') }}" class="btn btn-secondary btn-sm">Go to Sections</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-door-open fa-3x text-primary mb-2"></i>
+                                <h5 class="card-title">Classrooms</h5>
+                                <p class="card-text small">Manage classrooms & facilities</p>
+                                <a href="{{ url_for('admin.manage_classrooms') }}" class="btn btn-primary btn-sm">Go to Classrooms</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-calendar-alt fa-3x text-success mb-2"></i>
+                                <h5 class="card-title">Study Plans</h5>
+                                <p class="card-text small">Manage student study plans</p>
+                                <a href="{{ url_for('admin.manage_study_plans') }}" class="btn btn-success btn-sm">Go to Study Plans</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-clock fa-3x text-info mb-2"></i>
+                                <h5 class="card-title">Timetables</h5>
+                                <p class="card-text small">Manage weekly schedules</p>
+                                <a href="{{ url_for('admin.manage_timetables') }}" class="btn btn-info btn-sm text-white">Go to Timetables</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-calendar-week fa-3x text-secondary mb-2"></i>
+                                <h5 class="card-title">Semesters</h5>
+                                <p class="card-text small">Manage academic terms</p>
+                                <a href="{{ url_for('admin.manage_semesters') }}" class="btn btn-secondary btn-sm">Go to Semesters</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-hourglass-half fa-3x text-danger mb-2"></i>
+                                <h5 class="card-title">Registration Windows</h5>
+                                <p class="card-text small">Set registration periods</p>
+                                <a href="{{ url_for('admin.manage_registration_windows') }}" class="btn btn-danger btn-sm">Go to Windows</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-history fa-3x text-dark mb-2"></i>
+                                <h5 class="card-title">System Logs</h5>
+                                <p class="card-text small">View audit trail</p>
+                                <a href="{{ url_for('admin.view_logs') }}" class="btn btn-dark btn-sm">Go to Logs</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-line fa-3x text-warning mb-2"></i>
+                                <h5 class="card-title">Reports</h5>
+                                <p class="card-text small">View system reports</p>
+                                <a href="{{ url_for('admin.reports') }}" class="btn btn-warning btn-sm">Go to Reports</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Department Reports Cards -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Department Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 shadow-sm border-primary">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-3x text-primary mb-2"></i>
+                                <h5 class="card-title">Students by Department</h5>
+                                <p class="card-text small">View all students grouped by their major department</p>
+                                <a href="{{ url_for('admin.students_by_department') }}" class="btn btn-outline-primary">View Students by Dept</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 shadow-sm border-success">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chalkboard-teacher fa-3x text-success mb-2"></i>
+                                <h5 class="card-title">Teachers by Department</h5>
+                                <p class="card-text small">View all teachers grouped by their department</p>
+                                <a href="{{ url_for('admin.teachers_by_department') }}" class="btn btn-outline-success">View Teachers by Dept</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 shadow-sm border-warning">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-line fa-3x text-warning mb-2"></i>
+                                <h5 class="card-title">Section Timetables</h5>
+                                <p class="card-text small">View course section schedules</p>
+                                <a href="{{ url_for('admin.manage_sections') }}" class="btn btn-outline-warning">View Sections</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Logs -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-clock"></i> Recent System Logs</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_logs %}
+                            <tr>
+                                <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M') if log.created_at else 'N/A' }}</div>
+                                <td>{{ log.user.username if log.user else 'System' }}</div>
+                                <td><span class="badge bg-secondary">{{ log.action }}</span></div>
+                                <td>{{ log.details or '-' }}</div>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center">No logs available</div>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

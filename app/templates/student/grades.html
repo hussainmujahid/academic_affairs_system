@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-0"><i class="fas fa-award"></i> My Grades</h1>
+        <p class="text-muted mt-1">View your academic performance and grades</p>
+    </div>
+    <div>
+        <span class="badge bg-primary fs-6 me-1">GPA: {{ "%.2f"|format(gpa) }}</span>
+        <span class="badge bg-success fs-6">Total Credits: {{ total_credits }}</span>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if registrations %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="gradesTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 12%">Course Code</th>
+                        <th style="width: 28%">Course Title</th>
+                        <th style="width: 8%" class="text-center">Credits</th>
+                        <th style="width: 12%">Semester</th>
+                        <th style="width: 10%" class="text-center">Regular (30%)</th>
+                        <th style="width: 10%" class="text-center">Final (70%)</th>
+                        <th style="width: 10%" class="text-center">Overall</th>
+                        <th style="width: 8%" class="text-center">Letter</th>
+                        <th style="width: 10%" class="text-center">Status</th>
+                    </thead>
+                </thead>
+                <tbody>
+                    {% for reg in registrations %}
+                    <tr id="grade-row-{{ reg.registration_id }}">
+                        <td><strong class="text-primary">{{ reg.section.course.course_code }}</strong></td>
+                        <td>
+                            {{ reg.section.course.title }}
+                            {% if reg.section.course.description %}
+                            <br>
+                            <small class="text-muted">{{ reg.section.course.description[:50] }}{% if reg.section.course.description|length > 50 %}...{% endif %}</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-center"><span class="badge bg-info">{{ reg.section.course.credits }}</span></td>
+                        <td>{{ reg.section.semester.semester_name if reg.section.semester else 'N/A' }}</td>
+                        <td class="text-center">{{ reg.regular_grade or 'N/A' }}</td>
+                        <td class="text-center">{{ reg.final_grade or 'N/A' }}</td>
+                        <td class="text-center fw-bold">
+                            {% if reg.grade %}
+                                <span class="
+                                    {% if reg.grade >= 90 %}text-success
+                                    {% elif reg.grade >= 80 %}text-primary
+                                    {% elif reg.grade >= 70 %}text-info
+                                    {% elif reg.grade >= 60 %}text-warning
+                                    {% else %}text-danger
+                                    {% endif %}">
+                                    {{ reg.grade }}
+                                </span>
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if reg.grade %}
+                                {% if reg.grade >= 90 %}
+                                    <span class="badge bg-success">A</span>
+                                {% elif reg.grade >= 80 %}
+                                    <span class="badge bg-primary">B</span>
+                                {% elif reg.grade >= 70 %}
+                                    <span class="badge bg-info">C</span>
+                                {% elif reg.grade >= 60 %}
+                                    <span class="badge bg-warning">D</span>
+                                {% else %}
+                                    <span class="badge bg-danger">F</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">In Progress</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge 
+                                {% if reg.status == 'completed' %}bg-success
+                                {% elif reg.status == 'enrolled' %}bg-primary
+                                {% else %}bg-danger
+                                {% endif %}">
+                                {{ reg.status|capitalize }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-chart-line fa-4x text-muted mb-3 d-block"></i>
+            <h5 class="text-muted">No Grades Available</h5>
+            <p class="text-muted">Complete your courses to see your grades here.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- GPA Statistics -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Current GPA</h6>
+                        <h2 class="mb-0">{{ "%.2f"|format(gpa) }}</h2>
+                    </div>
+                    <i class="fas fa-chart-line fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Total Credits</h6>
+                        <h2 class="mb-0">{{ total_credits }}</h2>
+                    </div>
+                    <i class="fas fa-certificate fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Courses Taken</h6>
+                        <h2 class="mb-0">{{ registrations|length }}</h2>
+                    </div>
+                    <i class="fas fa-book fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GPA Calculation Info -->
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="fas fa-calculator"></i> Grade Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6><i class="fas fa-chart-simple text-primary"></i> Grade Scale</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr><th>Grade</th><th>Percentage</th><th>GPA Points</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="fw-bold text-success">A</td><td>90-100%</td><td>4.0</td></tr>
+                            <tr><td class="fw-bold text-primary">B</td><td>80-89%</td><td>3.0</td></tr>
+                            <tr><td class="fw-bold text-info">C</td><td>70-79%</td><td>2.0</td></tr>
+                            <tr><td class="fw-bold text-warning">D</td><td>60-69%</td><td>1.0</td></tr>
+                            <tr><td class="fw-bold text-danger">F</td><td>&lt;60%</td><td>0.0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6><i class="fas fa-calculator text-primary"></i> Calculation Method</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-percent text-success me-2"></i>
+                        <strong>Regular Grade:</strong> 30% of final grade
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-percent text-danger me-2"></i>
+                        <strong>Final Exam:</strong> 70% of final grade
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-calculator text-info me-2"></i>
+                        <strong>Formula:</strong> Overall = (Regular × 0.3) + (Final × 0.7)
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-chart-line text-warning me-2"></i>
+                        <strong>GPA:</strong> Σ(Grade Points × Credits) / Σ(Credits)
+                    </li>
+                </ul>
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i> Only completed courses with grades are included in GPA calculation.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(30, 60, 114, 0.05);
+    transition: all 0.2s ease;
+}
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit"></i> Edit Study Plan: {{ plan.plan_name }}</h1>
+    <a href="{{ url_for('admin.manage_study_plans') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Plans
+    </a>
+</div>
+
+<div class="row">
+    <!-- Plan Details -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Plan Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="plan_name" class="form-label">Plan Name *</label>
+                        <input type="text" class="form-control" id="plan_name" name="plan_name" value="{{ plan.plan_name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="student_id" class="form-label">Student</label>
+                        <select class="form-select" id="student_id" name="student_id">
+                            {% for student in students %}
+                            <option value="{{ student.student_id }}" {% if plan.student_id == student.student_id %}selected{% endif %}>
+                                {{ student.user.full_name }} ({{ student.student_number }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="major_id" class="form-label">Major</label>
+                        <select class="form-select" id="major_id" name="major_id">
+                            {% for major in majors %}
+                            <option value="{{ major.major_id }}" {% if plan.major_id == major.major_id %}selected{% endif %}>
+                                {{ major.major_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="academic_year" class="form-label">Academic Year</label>
+                            <input type="number" class="form-control" id="academic_year" name="academic_year" value="{{ plan.academic_year }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="semester_number" class="form-label">Semester</label>
+                            <input type="number" class="form-control" id="semester_number" name="semester_number" value="{{ plan.semester_number }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="semester_id" class="form-label">Academic Semester</label>
+                        <select class="form-select" id="semester_id" name="semester_id">
+                            <option value="">-- Select --</option>
+                            {% for semester in semesters %}
+                            <option value="{{ semester.semester_id }}" {% if plan.semester_id == semester.semester_id %}selected{% endif %}>
+                                {{ semester.semester_name }} {{ semester.year }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="active" {% if plan.status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="completed" {% if plan.status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="archived" {% if plan.status == 'archived' %}selected{% endif %}>Archived</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Courses in Plan -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-book"></i> Courses in this Plan</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Course Title</th>
+                                <th>Credits</th>
+                                <th>Required</th>
+                                <th>Semester</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pc in plan.courses %}  {# Use direct iteration, no .all() #}
+                            <tr>
+                                <td><strong>{{ pc.course.course_code }}</strong></td>
+                                <td>{{ pc.course.title }}</div>
+                                <td>{{ pc.course.credits }}</div>
+                                <td>
+                                    {% if pc.is_required %}
+                                        <span class="badge bg-primary">Required</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Elective</span>
+                                    {% endif %}
+                                </div>
+                                <td>{{ pc.semester_offered }}</div>
+                                <td>
+                                    <span class="badge bg-info">{{ pc.status }}</span>
+                                </div>
+                                <td>
+                                    <form method="POST" action="{{ url_for('admin.remove_course_from_study_plan', plan_id=plan.plan_id, plan_course_id=pc.id) }}" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Remove this course?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center">No courses added to this plan yet.</div>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <hr>
+                <h6>Add Course to Plan</h6>
+                <form method="POST" action="{{ url_for('admin.add_course_to_study_plan', plan_id=plan.plan_id) }}" class="row g-2">
+                    <div class="col-md-5">
+                        <select class="form-select" name="course_id" required>
+                            <option value="">-- Select Course --</option>
+                            {% for course in courses %}
+                            <option value="{{ course.course_id }}">{{ course.course_code }} - {{ course.title }} ({{ course.credits }} credits)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" name="semester_offered">
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="is_required" name="is_required" checked>
+                            <label class="form-check-label" for="is_required">Required</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">Add Course</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Research Link -->
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-flask"></i> Research/Thesis</h5>
+            </div>
+            <div class="card-body text-center">
+                <a href="{{ url_for('admin.manage_plan_research', plan_id=plan.plan_id) }}" class="btn btn-info">
+                    <i class="fas fa-flask"></i> Manage Research for this Plan
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

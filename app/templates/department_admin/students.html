@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-0"><i class="fas fa-users text-primary"></i> Students - {{ department.department_name }}</h1>
+        <p class="text-muted mt-1">Manage students enrolled in your department</p>
+    </div>
+    <div>
+        <a href="{{ url_for('dept_admin.create_student') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Student
+        </a>
+        <a href="{{ url_for('dept_admin.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if students %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                        <th style="width: 5%" class="text-center">ID</th>
+                        <th style="width: 12%">Student #</th>
+                        <th style="width: 12%">Username</th>
+                        <th style="width: 18%">Name</th>
+                        <th style="width: 18%">Email</th>
+                        <th style="width: 12%">Major</th>
+                        <th style="width: 8%" class="text-center">Year</th>
+                        <th style="width: 8%" class="text-center">GPA</th>
+                        <th style="width: 15%" class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                    <tr id="student-row-{{ s.student_id }}">
+                        <td class="text-center">{{ s.student_id }}</td>
+                        <td class="text-center"><code>{{ s.student_number }}</code></td>
+                        <td class="text-center"><code>{{ s.user.username if s.user else 'N/A' }}</code></td>
+                        <td>
+                            <strong>
+                                <a href="{{ url_for('dept_admin.view_student', student_id=s.student_id) }}" class="text-decoration-none">
+                                    {{ s.user.full_name if s.user else 'Unknown' }}
+                                </a>
+                            </strong>
+                        </td>
+                        <td>{{ s.user.email if s.user else 'N/A' }}</td>
+                        <td>{{ s.major_obj.major_name if s.major_obj else '-' }}</td>
+                        <td class="text-center">{{ s.enrollment_year or '-' }}</td>
+                        <td class="text-center">
+                            <span class="badge 
+                                {% if s.gpa >= 3.5 %}bg-success
+                                {% elif s.gpa >= 3.0 %}bg-primary
+                                {% elif s.gpa >= 2.0 %}bg-warning
+                                {% else %}bg-danger
+                                {% endif %}">
+                                {{ "%.2f"|format(s.gpa) if s.gpa else '0.00' }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                {% if s.user %}
+                                <a href="{{ url_for('dept_admin.view_student', student_id=s.student_id) }}" class="btn btn-sm btn-info" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('dept_admin.edit_student', student_id=s.student_id) }}" class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#resetPwdModal{{ s.user.user_id }}" title="Reset Password">
+                                    <i class="fas fa-key"></i>
+                                </button>
+                                <form method="POST" action="{{ url_for('dept_admin.delete_student', student_id=s.student_id) }}" 
+                                      style="display:inline;" 
+                                      onsubmit="return confirm('Delete student {{ s.user.full_name if s.user else s.student_number }}? This action cannot be undone.')">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="badge bg-danger">Orphaned</span>
+                                {% endif %}
+                            </div>
+                            
+                            {% if s.user %}
+                            <!-- Reset Password Modal -->
+                            <div class="modal fade" id="resetPwdModal{{ s.user.user_id }}" tabindex="-1">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <form method="POST" action="{{ url_for('dept_admin.reset_password', user_id=s.user.user_id) }}">
+                                            <div class="modal-header bg-info text-white">
+                                                <h5 class="modal-title">Reset Password for {{ s.user.username }}</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <label class="form-label">New Password</label>
+                                                <input type="text" name="new_password" class="form-control" required>
+                                                <small class="text-muted">Minimum 6 characters</small>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary">Reset Password</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-user-graduate fa-4x text-muted mb-3 d-block"></i>
+            <h5 class="text-muted">No Students Found</h5>
+            <p class="text-muted">No students enrolled in the {{ department.department_name }} department.</p>
+            <a href="{{ url_for('dept_admin.create_student') }}" class="btn btn-primary mt-2">
+                <i class="fas fa-plus"></i> Add Your First Student
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Statistics Summary -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Total Students</h6>
+                        <h2 class="mb-0">{{ students|length }}</h2>
+                    </div>
+                    <i class="fas fa-users fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Average GPA</h6>
+                        <h2 class="mb-0">
+                            {% set total_gpa = 0 %}
+                            {% set count = 0 %}
+                            {% for s in students %}
+                                {% if s.gpa %}
+                                    {% set total_gpa = total_gpa + (s.gpa|float) %}
+                                    {% set count = count + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                            {% set avg_gpa = (total_gpa / count) if count > 0 else 0 %}
+                            {{ "%.2f"|format(avg_gpa) }}
+                        </h2>
+                    </div>
+                    <i class="fas fa-chart-line fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Department</h6>
+                        <h2 class="mb-0">{{ department.department_code }}</h2>
+                    </div>
+                    <i class="fas fa-building fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Credentials Info Card -->
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Student Login Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>Username Format:</strong>
+                <p class="mb-0">firstname</p>
+            </div>
+            <div class="col-md-3">
+                <strong>Default Password:</strong>
+                <p class="mb-0">firstname123</p>
+            </div>
+            <div class="col-md-3">
+                <strong>Student Number:</strong>
+                <p class="mb-0">Auto-generated</p>
+            </div>
+            <div class="col-md-3">
+                <strong>Login URL:</strong>
+                <p class="mb-0"><code>http://localhost:5000/auth/login</code></p>
+            </div>
+        </div>
+        <hr>
+        <p class="mb-0 text-muted">Students should change their password after first login.</p>
+    </div>
+</div>
+
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(30, 60, 114, 0.05);
+    transition: all 0.2s ease;
+}
+.btn-group .btn {
+    transition: all 0.2s ease;
+}
+.btn-group .btn:hover {
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}

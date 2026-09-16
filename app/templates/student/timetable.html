@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="fas fa-calendar-alt"></i> My Class Schedule</h1>
+        <p class="text-muted">{{ student.user.full_name }} - {{ student.student_number }}</p>
+    </div>
+    <div>
+        <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Print Schedule
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="fas fa-clock"></i> Weekly Class Schedule</h5>
+    </div>
+    <div class="card-body">
+        {% if timetables %}
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 15%">Time / Day</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set time_slots = [
+                        '08:00-09:30', '09:30-11:00', '11:00-12:30', 
+                        '12:30-14:00', '14:00-15:30', '15:30-17:00', '17:00-18:30'
+                    ] %}
+                    {% for time_slot in time_slots %}
+                    <tr>
+                        <td class="bg-light fw-bold">{{ time_slot }}</td>
+                        {% for day in range(5) %}
+                        <td>
+                            {% for tt in timetables %}
+                                {% if tt.day_of_week == day and tt.is_active %}
+                                    {% set slot_start = tt.start_time.strftime('%H:%M') %}
+                                    {% set slot_end = tt.end_time.strftime('%H:%M') %}
+                                    {% if slot_start >= time_slot.split('-')[0] and slot_start < time_slot.split('-')[1] %}
+                                        <div class="border rounded p-2 mb-1 bg-success bg-opacity-10">
+                                            <strong>{{ tt.section.course.course_code }}</strong><br>
+                                            <small>{{ tt.section.course.title[:20] }}</small><br>
+                                            <small>Room: {{ tt.classroom.room_number if tt.classroom else 'TBA' }}</small><br>
+                                            <small class="text-muted">Sec {{ tt.section.section_number }}</small>
+                                            {% if tt.week_pattern != 'weekly' %}
+                                                <br><small class="text-muted">({{ tt.week_pattern }})</small>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-warning text-center">
+            <i class="fas fa-exclamation-triangle"></i> No timetable entries found.
+            <p class="mt-2">You don't have any registered courses with schedules yet.</p>
+            <a href="{{ url_for('student.available_courses') }}" class="btn btn-primary mt-2">
+                <i class="fas fa-plus-circle"></i> Register for Courses
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Registered Courses Summary -->
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-book"></i> My Registered Courses</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% set enrolled_courses = student.registrations|selectattr('status', 'equalto', 'enrolled')|list %}
+            {% if enrolled_courses %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Course Title</th>
+                                <th>Section</th>
+                                <th>Credits</th>
+                                <th>Schedule</th>
+                                <th>Room</th>
+                                <th>Instructor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reg in enrolled_courses %}
+                            {% set section = reg.section %}
+                            <tr>
+                                <td><strong>{{ section.course.course_code }}</strong></td>
+                                <td>{{ section.course.title }}</div>
+                                <td class="text-center">Section {{ section.section_number }}</div>
+                                <td class="text-center">{{ section.course.credits }}</div>
+                                <td>
+                                    {% set section_timetables = section.timetables|selectattr('is_active')|list %}
+                                    {% if section_timetables %}
+                                        {% for tt in section_timetables %}
+                                            <span class="badge bg-info d-block mb-1">
+                                                {% if tt.day_of_week == 0 %}Mon
+                                                {% elif tt.day_of_week == 1 %}Tue
+                                                {% elif tt.day_of_week == 2 %}Wed
+                                                {% elif tt.day_of_week == 3 %}Thu
+                                                {% elif tt.day_of_week == 4 %}Fri
+                                                {% endif %}
+                                                {{ tt.start_time.strftime('%H:%M') }}-{{ tt.end_time.strftime('%H:%M') }}
+                                            </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">Schedule TBA</span>
+                                    {% endif %}
+                                </div>
+                                <td>
+                                    {% if section_timetables %}
+                                        {% for tt in section_timetables %}
+                                            <span class="badge bg-secondary d-block mb-1">{{ tt.classroom.room_number if tt.classroom else 'TBA' }}</span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">TBA</span>
+                                    {% endif %}
+                                </div>
+                                <td>
+                                    {{ section.teacher.user.full_name if section.teacher and section.teacher.user else 'TBA' }}
+                                </div>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">You are not registered for any courses.</p>
+                <div class="text-center">
+                    <a href="{{ url_for('student.available_courses') }}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> Browse Available Courses
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.table-bordered td, .table-bordered th {
+    vertical-align: top;
+    min-height: 100px;
+}
+.table-bordered td {
+    height: 100px;
+    width: 14%;
+}
+.bg-opacity-10 {
+    background-color: rgba(40, 167, 69, 0.1);
+}
+@media print {
+    .btn, .navbar {
+        display: none !important;
+    }
+    .table-bordered {
+        border: 1px solid #000;
+    }
+}
+</style>
+{% endblock %}

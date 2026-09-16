@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit"></i> Edit User: {{ user.username }}</h1>
+    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Users
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Basic Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">First Name *</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Last Name *</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Username *</label>
+                            <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">New Password (leave blank to keep current)</label>
+                        <input type="password" name="password" class="form-control" placeholder="Enter new password (min 6 characters)">
+                        <small class="text-muted">Only enter if you want to change the password</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="is_active" class="form-check-input" value="1" {% if user.is_active %}checked{% endif %}>
+                            <label class="form-check-label">Active Account</label>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>Role:</strong> 
+                        {% if user.role == 'department_admin' %}
+                            Department Admin
+                        {% else %}
+                            {{ user.role|title }}
+                        {% endif %}
+                        <span class="text-muted">(Cannot be changed here. Contact super admin to change role.)</span>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-save"></i> Update User
+                        </button>
+                        <a href="{{ url_for('admin.manage_users') }}" class="btn btn-secondary btn-lg px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h6 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                {% if user.role == 'student' %}
+                    <a href="{{ url_for('dept_admin.view_student', student_id=user.user_id) }}" class="btn btn-sm btn-primary w-100 mb-2">
+                        <i class="fas fa-eye"></i> View Student Profile
+                    </a>
+                    <a href="{{ url_for('dept_admin.edit_student', student_id=user.user_id) }}" class="btn btn-sm btn-warning w-100 mb-2">
+                        <i class="fas fa-edit"></i> Edit Student Details (Major, DOB, Address)
+                    </a>
+                {% elif user.role in ['teacher', 'department_admin'] %}
+                    <a href="{{ url_for('dept_admin.view_teacher', teacher_id=user.user_id) }}" class="btn btn-sm btn-primary w-100 mb-2">
+                        <i class="fas fa-eye"></i> View Teacher Profile
+                    </a>
+                    <a href="{{ url_for('dept_admin.edit_teacher', teacher_id=user.user_id) }}" class="btn btn-sm btn-warning w-100 mb-2">
+                        <i class="fas fa-edit"></i> Edit Teacher Details (Major, Research, Address)
+                    </a>
+                {% endif %}
+                
+                <hr>
+                
+                <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.user_id) }}" 
+                      onsubmit="return confirm('Delete user {{ user.username }}? This cannot be undone.')">
+                    <button type="submit" class="btn btn-sm btn-danger w-100">
+                        <i class="fas fa-trash-alt"></i> Delete User
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Info Summary Card -->
+<div class="card mt-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="fas fa-info-circle"></i> User Information Summary</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <p class="mb-1"><strong>User ID:</strong> {{ user.user_id }}</p>
+                <p class="mb-1"><strong>Username:</strong> {{ user.username }}</p>
+                <p class="mb-1"><strong>Full Name:</strong> {{ user.full_name }}</p>
+            </div>
+            <div class="col-md-4">
+                <p class="mb-1"><strong>Email:</strong> {{ user.email }}</p>
+                <p class="mb-1"><strong>Role:</strong> 
+                    <span class="badge 
+                        {% if user.role == 'admin' %}bg-danger
+                        {% elif user.role == 'department_admin' %}bg-warning
+                        {% elif user.role == 'teacher' %}bg-info
+                        {% else %}bg-success
+                        {% endif %}">
+                        {{ user.role|upper }}
+                    </span>
+                </p>
+                <p class="mb-1"><strong>Status:</strong> 
+                    {% if user.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-4">
+                <p class="mb-1"><strong>Created:</strong> {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</p>
+                <p class="mb-1"><strong>Last Login:</strong> {{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Never' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role-specific details (read-only preview) -->
+{% if user.role in ['teacher', 'department_admin'] and user.teacher %}
+<div class="card mt-3">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="fas fa-chalkboard-teacher"></i> Teacher Information (Read-Only)</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <small class="text-muted">Employee #</small>
+                <p class="mb-0">{{ user.teacher.employee_number }}</p>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Department</small>
+                <p class="mb-0">{{ user.teacher.department.department_name if user.teacher.department else 'Not Assigned' }}</p>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Title</small>
+                <p class="mb-0">{{ user.teacher.title or 'Instructor' }}</p>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Major</small>
+                <p class="mb-0">{{ user.teacher.major_obj.major_name if user.teacher.major_obj else 'Not specified' }}</p>
+            </div>
+        </div>
+        <div class="text-end mt-2">
+            <a href="{{ url_for('dept_admin.edit_teacher', teacher_id=user.user_id) }}" class="btn btn-sm btn-warning">
+                <i class="fas fa-edit"></i> Edit Teacher Details
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if user.role == 'student' and user.student %}
+<div class="card mt-3">
+    <div class="card-header bg-success text-white">
+        <h6 class="mb-0"><i class="fas fa-user-graduate"></i> Student Information (Read-Only)</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <small class="text-muted">Student #</small>
+                <p class="mb-0">{{ user.student.student_number }}</p>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Major</small>
+                <p class="mb-0">{{ user.student.major_obj.major_name if user.student.major_obj else 'Undeclared' }}</p>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Enrollment Year</small>
+                <p class="mb-0">{{ user.student.enrollment_year or 'N/A' }}</p>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">GPA</small>
+                <p class="mb-0">{{ "%.2f"|format(user.student.gpa) if user.student.gpa else 'N/A' }}</p>
+            </div>
+        </div>
+        <div class="text-end mt-2">
+            <a href="{{ url_for('dept_admin.edit_student', student_id=user.user_id) }}" class="btn btn-sm btn-warning">
+                <i class="fas fa-edit"></i> Edit Student Details
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-users"></i> Students by Department</h1>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- Search Bar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by name, email, or student ID...">
+                    <button class="btn btn-primary" onclick="searchStudents()">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearSearch()">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select id="deptFilter" class="form-control" onchange="filterByDepartment()">
+                    <option value="all">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.department_name }}">{{ dept.department_name }}</option>
+                    {% endfor %}
+                    <option value="no_major">No Major</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for dept_name, students in students_by_dept.items() %}
+<div class="card mb-4 department-section" data-dept="{{ dept_name }}">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-building"></i> {{ dept_name }}
+            <span class="badge bg-light text-dark float-end">{{ students|length }} students</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover student-table">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Number</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Major</th>
+                        <th>Enrollment Year</th>
+                        <th>Total Credits</th>
+                        <th>GPA</th>
+                        <th>Phone</th>
+                    </thead>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr class="student-row">
+                        <td>{{ student.student_id }}</div>
+                        <td>{{ student.student_number }}</div>
+                        <td><strong>{{ student.user.full_name if student.user else '-' }}</strong></div>
+                        <td>{{ student.user.email if student.user else '-' }}</div>
+                        <td>
+                            {% if student.major_obj %}
+                                <span class="badge bg-info">{{ student.major_obj.major_name }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Undeclared</span>
+                            {% endif %}
+                        </div>
+                        <td>{{ student.enrollment_year or '-' }}</div>
+                        <td>{{ student.total_credits or 0 }}</div>
+                        <td>
+                            {% if student.gpa %}
+                                <span class="badge 
+                                    {% if student.gpa >= 3.5 %}bg-success
+                                    {% elif student.gpa >= 3.0 %}bg-primary
+                                    {% elif student.gpa >= 2.0 %}bg-warning
+                                    {% else %}bg-danger
+                                    {% endif %}">
+                                    {{ student.gpa }}
+                                </span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </div>
+                        <td>{{ student.phone_number or '-' }}</div>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center">No students in this department</div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Students with no major -->
+{% if students_no_major %}
+<div class="card mb-4" id="no-major-section">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">
+            <i class="fas fa-exclamation-triangle"></i> No Major Assigned
+            <span class="badge bg-dark text-white float-end">{{ students_no_major|length }} students</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i> These students need to be assigned a major.
+            <a href="{{ url_for('admin.manage_users') }}" class="alert-link">Edit their profiles</a> to assign a major.
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Number</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Enrollment Year</th>
+                        <th>Phone</th>
+                        <th>Action</th>
+                    </thead>
+                </thead>
+                <tbody>
+                    {% for student in students_no_major %}
+                    <tr class="student-row">
+                        <td>{{ student.student_id }}</div>
+                        <td>{{ student.student_number }}</div>
+                        <td><strong>{{ student.user.full_name if student.user else '-' }}</strong></div>
+                        <td>{{ student.user.email if student.user else '-' }}</div>
+                        <td>{{ student.enrollment_year or '-' }}</div>
+                        <td>{{ student.phone_number or '-' }}</div>
+                        <td>
+                            <a href="{{ url_for('admin.edit_user', user_id=student.student_id) }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i> Assign Major
+                            </a>
+                        </div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function searchStudents() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('.student-row');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function filterByDepartment() {
+    const selectedDept = document.getElementById('deptFilter').value;
+    const sections = document.querySelectorAll('.department-section');
+    
+    sections.forEach(section => {
+        const deptName = section.getAttribute('data-dept');
+        if (selectedDept === 'all' || deptName === selectedDept) {
+            section.style.display = '';
+        } else {
+            section.style.display = 'none';
+        }
+    });
+    
+    const noMajorSection = document.getElementById('no-major-section');
+    if (noMajorSection) {
+        if (selectedDept === 'all' || selectedDept === 'no_major') {
+            noMajorSection.style.display = '';
+        } else {
+            noMajorSection.style.display = 'none';
+        }
+    }
+}
+
+function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    searchStudents();
+}
+</script>
+{% endblock %}

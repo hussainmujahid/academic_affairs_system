@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit"></i> Edit Classroom: {{ classroom.room_number }}</h1>
+    <a href="{{ url_for('admin.manage_classrooms') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Classrooms
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Classroom Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="room_number" class="form-label">Room Number *</label>
+                            <input type="text" class="form-control" id="room_number" name="room_number" value="{{ classroom.room_number }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="building" class="form-label">Building</label>
+                            <input type="text" class="form-control" id="building" name="building" value="{{ classroom.building or '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="capacity" class="form-label">Capacity</label>
+                            <input type="number" class="form-control" id="capacity" name="capacity" value="{{ classroom.capacity }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="room_type" class="form-label">Room Type</label>
+                            <select class="form-select" id="room_type" name="room_type">
+                                <option value="">-- Select --</option>
+                                <option value="Lecture Hall" {% if classroom.room_type == 'Lecture Hall' %}selected{% endif %}>Lecture Hall</option>
+                                <option value="Classroom" {% if classroom.room_type == 'Classroom' %}selected{% endif %}>Classroom</option>
+                                <option value="Laboratory" {% if classroom.room_type == 'Laboratory' %}selected{% endif %}>Laboratory</option>
+                                <option value="Seminar Room" {% if classroom.room_type == 'Seminar Room' %}selected{% endif %}>Seminar Room</option>
+                                <option value="Auditorium" {% if classroom.room_type == 'Auditorium' %}selected{% endif %}>Auditorium</option>
+                                <option value="Computer Lab" {% if classroom.room_type == 'Computer Lab' %}selected{% endif %}>Computer Lab</option>
+                                <option value="Conference Room" {% if classroom.room_type == 'Conference Room' %}selected{% endif %}>Conference Room</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="has_projector" name="has_projector" {% if classroom.has_projector %}checked{% endif %}>
+                            <label class="form-check-label" for="has_projector">
+                                <i class="fas fa-video"></i> Has Projector
+                            </label>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="has_computers" name="has_computers" {% if classroom.has_computers %}checked{% endif %}>
+                            <label class="form-check-label" for="has_computers">
+                                <i class="fas fa-desktop"></i> Has Computers
+                            </label>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if classroom.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">
+                                <i class="fas fa-check-circle"></i> Active
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <a href="{{ url_for('admin.manage_classrooms') }}" class="btn btn-secondary btn-lg px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Classroom Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Classroom ID:</strong> {{ classroom.classroom_id }}</p>
+                <p><strong>Room Number:</strong> {{ classroom.room_number }}</p>
+                <p><strong>Building:</strong> {{ classroom.building or 'Not Specified' }}</p>
+                <p><strong>Capacity:</strong> {{ classroom.capacity }} students</p>
+                <p><strong>Room Type:</strong> {{ classroom.room_type or 'Not Specified' }}</p>
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>Projector: {% if classroom.has_projector %}<span class="text-success"><i class="fas fa-check-circle"></i> Yes</span>{% else %}<span class="text-danger"><i class="fas fa-times-circle"></i> No</span>{% endif %}</li>
+                    <li>Computers: {% if classroom.has_computers %}<span class="text-success"><i class="fas fa-check-circle"></i> Yes</span>{% else %}<span class="text-danger"><i class="fas fa-times-circle"></i> No</span>{% endif %}</li>
+                </ul>
+                <p><strong>Status:</strong> 
+                    {% if classroom.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        
+        <!-- Danger Zone -->
+        <div class="card mt-3">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h5>
+            </div>
+            <div class="card-body">
+                {% set timetable_count = classroom.timetables|length %}
+                {% if timetable_count > 0 %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Warning: This classroom has {{ timetable_count }} timetable entry(s).
+                    You must remove all timetables before deleting this classroom.
+                </div>
+                {% endif %}
+                
+                <form method="POST" action="{{ url_for('admin.delete_classroom', classroom_id=classroom.classroom_id) }}" 
+                      onsubmit="return confirm('Delete classroom {{ classroom.room_number }}? This action cannot be undone.')">
+                    <button type="submit" class="btn btn-danger w-100" {% if timetable_count > 0 %}disabled{% endif %}>
+                        <i class="fas fa-trash"></i> Delete Classroom
+                    </button>
+                </form>
+                {% if timetable_count > 0 %}
+                <small class="text-muted mt-2 d-block">Cannot delete: Classroom has active timetable entries.</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Timetables for this classroom -->
+<div class="card mt-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="fas fa-clock"></i> Timetable for {{ classroom.room_number }}</h5>
+    </div>
+    <div class="card-body">
+        {# classroom.timetables is already a list - no .all() needed #}
+        {% if classroom.timetables %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Day</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Course</th>
+                        <th>Section</th>
+                        <th>Teacher</th>
+                        <th>Pattern</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tt in classroom.timetables %}
+                    <tr>
+                        <td>
+                            {% if tt.day_of_week == 0 %}Monday
+                            {% elif tt.day_of_week == 1 %}Tuesday
+                            {% elif tt.day_of_week == 2 %}Wednesday
+                            {% elif tt.day_of_week == 3 %}Thursday
+                            {% elif tt.day_of_week == 4 %}Friday
+                            {% elif tt.day_of_week == 5 %}Saturday
+                            {% else %}Sunday
+                            {% endif %}
+                        </td>
+                        <td>{{ tt.start_time.strftime('%H:%M') if tt.start_time else '-' }}</div>
+                        <td>{{ tt.end_time.strftime('%H:%M') if tt.end_time else '-' }}</div>
+                        <td>
+                            <strong>{{ tt.section.course.course_code if tt.section and tt.section.course else '-' }}</strong><br>
+                            <small>{{ tt.section.course.title[:30] if tt.section and tt.section.course else '-' }}</small>
+                        </div>
+                        <td>Section {{ tt.section.section_number if tt.section else '-' }}</div>
+                        <td>{{ tt.section.teacher.user.full_name if tt.section and tt.section.teacher and tt.section.teacher.user else '-' }}</div>
+                        <td>{{ tt.week_pattern }}</div>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('admin.edit_timetable', timetable_id=tt.timetable_id) }}" class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('admin.delete_timetable', timetable_id=tt.timetable_id) }}" 
+                                      style="display:inline;" 
+                                      onsubmit="return confirm('Delete this timetable entry?')">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-calendar-alt fa-3x text-muted mb-3 d-block"></i>
+            <p class="text-muted">No timetables assigned to this classroom.</p>
+            <a href="{{ url_for('admin.manage_timetables') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Timetable Entry
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.card-header {
+    font-weight: bold;
+}
+.table-hover tbody tr:hover {
+    background-color: rgba(30, 60, 114, 0.05);
+    transition: all 0.2s ease;
+}
+.btn-group .btn {
+    transition: all 0.2s ease;
+}
+.btn-group .btn:hover {
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}

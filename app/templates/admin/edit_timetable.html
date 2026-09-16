@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit"></i> Edit Timetable Entry</h1>
+    <a href="{{ url_for('admin.manage_timetables') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Timetables
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">Timetable Details</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="section_id" class="form-label">Section *</label>
+                <select class="form-select" id="section_id" name="section_id" required>
+                    {% for section in sections %}
+                    <option value="{{ section.section_id }}" {% if timetable.section_id == section.section_id %}selected{% endif %}>
+                        {{ section.course.course_code if section.course else 'Unknown' }} - Section {{ section.section_number }}
+                        ({{ section.semester.semester_name if section.semester else 'No Semester' }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="classroom_id" class="form-label">Classroom *</label>
+                <select class="form-select" id="classroom_id" name="classroom_id" required>
+                    {% for classroom in classrooms %}
+                    <option value="{{ classroom.classroom_id }}" {% if timetable.classroom_id == classroom.classroom_id %}selected{% endif %}>
+                        {{ classroom.room_number }} - {{ classroom.building or 'No Building' }} (Capacity: {{ classroom.capacity }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="day_of_week" class="form-label">Day of Week *</label>
+                <select class="form-select" id="day_of_week" name="day_of_week" required>
+                    <option value="0" {% if timetable.day_of_week == 0 %}selected{% endif %}>Monday</option>
+                    <option value="1" {% if timetable.day_of_week == 1 %}selected{% endif %}>Tuesday</option>
+                    <option value="2" {% if timetable.day_of_week == 2 %}selected{% endif %}>Wednesday</option>
+                    <option value="3" {% if timetable.day_of_week == 3 %}selected{% endif %}>Thursday</option>
+                    <option value="4" {% if timetable.day_of_week == 4 %}selected{% endif %}>Friday</option>
+                    <option value="5" {% if timetable.day_of_week == 5 %}selected{% endif %}>Saturday</option>
+                    <option value="6" {% if timetable.day_of_week == 6 %}selected{% endif %}>Sunday</option>
+                </select>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="start_time" class="form-label">Start Time *</label>
+                    <input type="time" class="form-control" id="start_time" name="start_time" value="{{ timetable.start_time.strftime('%H:%M') if timetable.start_time else '' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="end_time" class="form-label">End Time *</label>
+                    <input type="time" class="form-control" id="end_time" name="end_time" value="{{ timetable.end_time.strftime('%H:%M') if timetable.end_time else '' }}" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="week_pattern" class="form-label">Week Pattern</label>
+                <select class="form-select" id="week_pattern" name="week_pattern">
+                    <option value="weekly" {% if timetable.week_pattern == 'weekly' %}selected{% endif %}>Weekly</option>
+                    <option value="odd" {% if timetable.week_pattern == 'odd' %}selected{% endif %}>Odd Weeks</option>
+                    <option value="even" {% if timetable.week_pattern == 'even' %}selected{% endif %}>Even Weeks</option>
+                </select>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if timetable.is_active %}checked{% endif %}>
+                <label class="form-check-label" for="is_active">
+                    Active
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="{{ url_for('admin.manage_timetables') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

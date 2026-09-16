@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="fas fa-edit"></i> Edit Timetable Entry</h1>
+        <p class="text-muted">{{ department.department_name }} - {{ department.department_code }}</p>
+    </div>
+    <div>
+        <a href="{{ url_for('dept_admin.manage_timetables') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Timetables
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Schedule Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Section *</label>
+                        <select name="section_id" class="form-control" required disabled>
+                            <option value="{{ timetable.section_id }}" selected>
+                                {{ timetable.section.course.course_code }} - Section {{ timetable.section.section_number }}
+                                ({{ timetable.section.semester.semester_name if timetable.section.semester else 'No Semester' }})
+                                - Teacher: {{ timetable.section.teacher.user.full_name if timetable.section.teacher else 'Not Assigned' }}
+                            </option>
+                        </select>
+                        <small class="text-muted">Section cannot be changed. Create a new timetable entry for a different section.</small>
+                        <input type="hidden" name="section_id" value="{{ timetable.section_id }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Classroom *</label>
+                        <select name="classroom_id" class="form-control" required>
+                            <option value="">-- Select Classroom --</option>
+                            {% for classroom in classrooms %}
+                            <option value="{{ classroom.classroom_id }}" {% if timetable.classroom_id == classroom.classroom_id %}selected{% endif %}>
+                                {{ classroom.room_number }} - {{ classroom.building or 'No Building' }} 
+                                (Capacity: {{ classroom.capacity }}) 
+                                {% if classroom.has_projector %}📽️{% endif %}
+                                {% if classroom.has_computers %}💻{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Day of Week *</label>
+                        <select name="day_of_week" class="form-control" required>
+                            <option value="0" {% if timetable.day_of_week == 0 %}selected{% endif %}>Monday</option>
+                            <option value="1" {% if timetable.day_of_week == 1 %}selected{% endif %}>Tuesday</option>
+                            <option value="2" {% if timetable.day_of_week == 2 %}selected{% endif %}>Wednesday</option>
+                            <option value="3" {% if timetable.day_of_week == 3 %}selected{% endif %}>Thursday</option>
+                            <option value="4" {% if timetable.day_of_week == 4 %}selected{% endif %}>Friday</option>
+                            <option value="5" {% if timetable.day_of_week == 5 %}selected{% endif %}>Saturday</option>
+                            <option value="6" {% if timetable.day_of_week == 6 %}selected{% endif %}>Sunday</option>
+                        </select>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Start Time *</label>
+                            <input type="time" name="start_time" class="form-control" 
+                                   value="{{ timetable.start_time.strftime('%H:%M') if timetable.start_time else '' }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">End Time *</label>
+                            <input type="time" name="end_time" class="form-control" 
+                                   value="{{ timetable.end_time.strftime('%H:%M') if timetable.end_time else '' }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Week Pattern</label>
+                        <select name="week_pattern" class="form-control">
+                            <option value="weekly" {% if timetable.week_pattern == 'weekly' %}selected{% endif %}>Weekly (Every Week)</option>
+                            <option value="odd" {% if timetable.week_pattern == 'odd' %}selected{% endif %}>Odd Weeks Only (Week 1, 3, 5...)</option>
+                            <option value="even" {% if timetable.week_pattern == 'even' %}selected{% endif %}>Even Weeks Only (Week 2, 4, 6...)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="is_active" id="is_active" 
+                               {% if timetable.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active">
+                            Active (Schedule will be visible to students)
+                        </label>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-save"></i> Update Schedule
+                        </button>
+                        <a href="{{ url_for('dept_admin.manage_timetables') }}" class="btn btn-secondary btn-lg px-4">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-5">
+        <!-- Current Schedule Info -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Current Schedule</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th style="width: 40%">Course:</th>
+                        <td>{{ timetable.section.course.course_code }} - {{ timetable.section.course.title }}</td>
+                    </tr>
+                    <tr>
+                        <th>Section:</th>
+                        <td>{{ timetable.section.section_number }}</td>
+                    </tr>
+                    <tr>
+                        <th>Teacher:</th>
+                        <td>{{ timetable.section.teacher.user.full_name if timetable.section.teacher else 'Not Assigned' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Day:</th>
+                        <td>
+                            {% if timetable.day_of_week == 0 %}Monday
+                            {% elif timetable.day_of_week == 1 %}Tuesday
+                            {% elif timetable.day_of_week == 2 %}Wednesday
+                            {% elif timetable.day_of_week == 3 %}Thursday
+                            {% elif timetable.day_of_week == 4 %}Friday
+                            {% elif timetable.day_of_week == 5 %}Saturday
+                            {% else %}Sunday
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Time:</th>
+                        <td>{{ timetable.start_time.strftime('%I:%M %p') }} - {{ timetable.end_time.strftime('%I:%M %p') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Classroom:</th>
+                        <td>{{ timetable.classroom.room_number if timetable.classroom else 'Not Assigned' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Pattern:</th>
+                        <td>{{ timetable.week_pattern }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td>
+                            {% if timetable.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Danger Zone -->
+        <div class="card mt-3 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('dept_admin.delete_timetable', timetable_id=timetable.timetable_id) }}" 
+                      onsubmit="return confirm('Delete this schedule? This action cannot be undone.')">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fas fa-trash"></i> Delete Schedule
+                    </button>
+                </form>
+                <small class="text-muted mt-2 d-block">
+                    Deleting this schedule will remove it from the system. Students will no longer see this schedule.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

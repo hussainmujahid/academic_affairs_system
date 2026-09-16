@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="fas fa-calendar-alt"></i> My Teaching Schedule</h1>
+        <p class="text-muted">{{ teacher.user.full_name }} - {{ teacher.title or 'Instructor' }}</p>
+    </div>
+    <div>
+        <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Print Schedule
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="fas fa-clock"></i> Weekly Teaching Schedule</h5>
+    </div>
+    <div class="card-body">
+        {% if timetables %}
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 15%">Time / Day</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set time_slots = [
+                        '08:00-09:30', '09:30-11:00', '11:00-12:30', 
+                        '12:30-14:00', '14:00-15:30', '15:30-17:00', '17:00-18:30'
+                    ] %}
+                    {% for time_slot in time_slots %}
+                    <tr>
+                        <td class="bg-light fw-bold">{{ time_slot }}</td>
+                        {% for day in range(5) %}
+                        <td>
+                            {% for tt in timetables %}
+                                {% if tt.day_of_week == day and tt.is_active %}
+                                    {% set slot_start = tt.start_time.strftime('%H:%M') %}
+                                    {% set slot_end = tt.end_time.strftime('%H:%M') %}
+                                    {% if slot_start >= time_slot.split('-')[0] and slot_start < time_slot.split('-')[1] %}
+                                        <div class="border rounded p-2 mb-1 bg-info bg-opacity-10">
+                                            <strong>{{ tt.section.course.course_code }}</strong><br>
+                                            <small>Sec {{ tt.section.section_number }}</small><br>
+                                            <small>{{ tt.classroom.room_number if tt.classroom else 'TBA' }}</small><br>
+                                            <small class="text-muted">{{ tt.start_time.strftime('%H:%M') }}-{{ tt.end_time.strftime('%H:%M') }}</small>
+                                            {% if tt.week_pattern != 'weekly' %}
+                                                <br><small class="text-muted">({{ tt.week_pattern }})</small>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-warning text-center">
+            <i class="fas fa-exclamation-triangle"></i> No timetable entries assigned to you.
+            <p class="mt-2">Please contact your department administrator to assign schedules.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Summary Card -->
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-chart-line"></i> Weekly Summary</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="text-center">
+                    <h3>{{ timetables|length }}</h3>
+                    <p class="text-muted">Total Classes per Week</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <h3>{{ timetables|selectattr('is_active')|list|length }}</h3>
+                    <p class="text-muted">Active Classes</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <h3>{{ timetables|map(attribute='section.course')|unique|list|length }}</h3>
+                    <p class="text-muted">Unique Courses</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table-bordered td, .table-bordered th {
+    vertical-align: top;
+    min-height: 100px;
+}
+.table-bordered td {
+    height: 100px;
+    width: 14%;
+}
+.bg-opacity-10 {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+@media print {
+    .btn, .navbar {
+        display: none !important;
+    }
+    .table-bordered {
+        border: 1px solid #000;
+    }
+}
+</style>
+{% endblock %}

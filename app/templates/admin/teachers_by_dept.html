@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-chalkboard-teacher"></i> Teachers by Department</h1>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- Search Bar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by name, email, employee ID, or research area...">
+                    <button class="btn btn-primary" onclick="searchTeachers()">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearSearch()">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select id="deptFilter" class="form-control" onchange="filterByDepartment()">
+                    <option value="all">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.department_name }}">{{ dept.department_name }}</option>
+                    {% endfor %}
+                    <option value="no_dept">No Department</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for dept_name, teachers in teachers_by_dept.items() %}
+<div class="card mb-4 department-section" data-dept="{{ dept_name }}">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-building"></i> {{ dept_name }}
+            <span class="badge bg-light text-dark float-end">{{ teachers|length }} teachers</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover teacher-table">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Employee #</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Title</th>
+                        <th>Specialization</th>
+                        <th>Research Area</th>
+                        <th>Hire Date</th>
+                        <th>Actions</th>
+                    </thead>
+                </thead>
+                <tbody>
+                    {% for teacher in teachers %}
+                    <tr class="teacher-row">
+                        <td class="text-center">{{ teacher.teacher_id }}</div>
+                        <td>{{ teacher.employee_number }}</div>
+                        <td><strong>{{ teacher.user.full_name if teacher.user else 'N/A' }}</strong></div>
+                        <td>{{ teacher.user.email if teacher.user else 'N/A' }}</div>
+                        <td>{{ teacher.title or 'Instructor' }}</div>
+                        <td>{{ teacher.major or '-' }}</div>
+                        <td>
+                            <small title="{{ teacher.research_area or '' }}">
+                                {{ teacher.research_area[:50] + '...' if teacher.research_area and teacher.research_area|length > 50 else teacher.research_area or '-' }}
+                            </small>
+                        </div>
+                        <td>{{ teacher.hire_date.strftime('%Y-%m-%d') if teacher.hire_date else '-' }}</div>
+                        <td>
+                            <a href="{{ url_for('admin.edit_user', user_id=teacher.teacher_id) }}" class="btn btn-sm btn-warning" title="Edit Teacher">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </div>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center">No teachers in this department</div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Teachers with no department -->
+{% if teachers_no_dept %}
+<div class="card mb-4" id="no-dept-section">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">
+            <i class="fas fa-exclamation-triangle"></i> No Department Assigned
+            <span class="badge bg-dark text-white float-end">{{ teachers_no_dept|length }} teachers</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i> These teachers need to be assigned to a department.
+            <a href="{{ url_for('admin.manage_users') }}" class="alert-link">Edit their profiles</a> to assign a department.
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Employee #</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Title</th>
+                        <th>Specialization</th>
+                        <th>Hire Date</th>
+                        <th>Action</th>
+                    </thead>
+                </thead>
+                <tbody>
+                    {% for teacher in teachers_no_dept %}
+                    <tr class="teacher-row">
+                        <td class="text-center">{{ teacher.teacher_id }}</div>
+                        <td>{{ teacher.employee_number }}</div>
+                        <td><strong>{{ teacher.user.full_name if teacher.user else 'N/A' }}</strong></div>
+                        <td>{{ teacher.user.email if teacher.user else 'N/A' }}</div>
+                        <td>{{ teacher.title or 'Instructor' }}</div>
+                        <td>{{ teacher.major or '-' }}</div>
+                        <td>{{ teacher.hire_date.strftime('%Y-%m-%d') if teacher.hire_date else '-' }}</div>
+                        <td>
+                            <a href="{{ url_for('admin.edit_user', user_id=teacher.teacher_id) }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i> Assign Dept
+                            </a>
+                        </div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function searchTeachers() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('.teacher-row');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function filterByDepartment() {
+    const selectedDept = document.getElementById('deptFilter').value;
+    const sections = document.querySelectorAll('.department-section');
+    
+    sections.forEach(section => {
+        const deptName = section.getAttribute('data-dept');
+        if (selectedDept === 'all' || deptName === selectedDept) {
+            section.style.display = '';
+        } else {
+            section.style.display = 'none';
+        }
+    });
+    
+    const noDeptSection = document.getElementById('no-dept-section');
+    if (noDeptSection) {
+        if (selectedDept === 'all' || selectedDept === 'no_dept') {
+            noDeptSection.style.display = '';
+        } else {
+            noDeptSection.style.display = 'none';
+        }
+    }
+}
+
+function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    searchTeachers();
+}
+</script>
+{% endblock %}

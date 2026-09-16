@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-layer-group"></i> My Sections</h1>
+    <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Course Title</th>
+                        <th>Section</th>
+                        <th>Schedule</th>
+                        <th>Room</th>
+                        <th>Students</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sections %}
+                    <tr id="section-row-{{ item.section.section_id }}">
+                        <td><strong>{{ item.section.course.course_code }}</strong></td>
+                        <td>{{ item.section.course.title }}</td>
+                        <td class="text-center">Section {{ item.section.section_number }}</td>
+                        <td>
+                            {% if item.timetables %}
+                                {% for tt in item.timetables %}
+                                    <span class="badge bg-info mb-1 d-block">
+                                        {% if tt.day_of_week == 0 %}Mon
+                                        {% elif tt.day_of_week == 1 %}Tue
+                                        {% elif tt.day_of_week == 2 %}Wed
+                                        {% elif tt.day_of_week == 3 %}Thu
+                                        {% elif tt.day_of_week == 4 %}Fri
+                                        {% elif tt.day_of_week == 5 %}Sat
+                                        {% else %}Sun
+                                        {% endif %}
+                                        {{ tt.start_time.strftime('%H:%M') }}-{{ tt.end_time.strftime('%H:%M') }}
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">TBD</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.timetables %}
+                                {% for tt in item.timetables %}
+                                    <span class="badge bg-secondary mb-1 d-block">{{ tt.classroom.room_number if tt.classroom else 'TBA' }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">TBD</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge {% if item.section.enrolled_count >= item.section.capacity %}bg-danger{% else %}bg-success{% endif %}">
+                                {{ item.section.enrolled_count }}/{{ item.section.capacity }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('teacher.section_roster', section_id=item.section.section_id) }}" class="btn btn-sm btn-primary" title="View Roster">
+                                    <i class="fas fa-users"></i> Roster
+                                </a>
+                                <a href="{{ url_for('teacher.enter_grades', section_id=item.section.section_id) }}" class="btn btn-sm btn-success" title="Enter Grades">
+                                    <i class="fas fa-edit"></i> Grades
+                                </a>
+                                <a href="{{ url_for('teacher.manage_attendance', section_id=item.section.section_id) }}" class="btn btn-sm btn-info" title="Mark Attendance">
+                                    <i class="fas fa-calendar-check"></i> Attendance
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <tr id="no-data-row">
+                        <td colspan="7" class="text-center">No sections assigned to you.</div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

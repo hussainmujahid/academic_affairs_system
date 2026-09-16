@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit"></i> Edit Section</h1>
+    <a href="{{ url_for('admin.manage_sections') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Sections
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Section Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Course *</label>
+                            <select name="course_id" class="form-control" required>
+                                <option value="">Select Course</option>
+                                {% for course in courses %}
+                                <option value="{{ course.course_id }}" {% if section.course_id == course.course_id %}selected{% endif %}>
+                                    {{ course.course_code }} - {{ course.title[:50] }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Semester *</label>
+                            <select name="semester_id" class="form-control" required>
+                                <option value="">Select Semester</option>
+                                {% for semester in semesters %}
+                                <option value="{{ semester.semester_id }}" {% if section.semester_id == semester.semester_id %}selected{% endif %}>
+                                    {{ semester.semester_name }} {{ semester.year }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Section Number *</label>
+                            <input type="text" name="section_number" class="form-control" value="{{ section.section_number }}" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Teacher</label>
+                            <select name="teacher_id" class="form-control">
+                                <option value="">-- Select Teacher --</option>
+                                {% for teacher in teachers %}
+                                <option value="{{ teacher.teacher_id }}" {% if section.teacher_id == teacher.teacher_id %}selected{% endif %}>
+                                    {{ teacher.user.full_name if teacher.user else teacher.employee_number }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Capacity *</label>
+                            <input type="number" name="capacity" class="form-control" value="{{ section.capacity }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-control">
+                            <option value="open" {% if section.status == 'open' %}selected{% endif %}>Open</option>
+                            <option value="closed" {% if section.status == 'closed' %}selected{% endif %}>Closed</option>
+                            <option value="cancelled" {% if section.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-save"></i> Update Section
+                        </button>
+                        <a href="{{ url_for('admin.manage_sections') }}" class="btn btn-secondary btn-lg px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Section Details</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Section ID:</strong> {{ section.section_id }}</p>
+                <p><strong>Course:</strong> {{ section.course.course_code }} - {{ section.course.title }}</p>
+                <p><strong>Current Enrollment:</strong> 
+                    <span class="badge {% if section.enrolled_count >= section.capacity %}bg-danger{% else %}bg-success{% endif %}">
+                        {{ section.enrolled_count }}/{{ section.capacity }}
+                    </span>
+                </p>
+                <p><strong>Available Seats:</strong> {{ section.capacity - section.enrolled_count }}</p>
+                <p><strong>Created:</strong> {{ section.semester.semester_name if section.semester else '-' }}</p>
+            </div>
+        </div>
+        
+        <!-- Danger Zone -->
+        <div class="card mt-3">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.delete_section', section_id=section.section_id) }}" 
+                      onsubmit="return confirm('Delete section {{ section.section_number }}? This will remove all enrollments and cannot be undone.')">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fas fa-trash"></i> Delete Section
+                    </button>
+                </form>
+                <small class="text-muted mt-2 d-block">Cannot delete if students are enrolled.</small>
+                
+                <hr>
+                <form method="POST" action="{{ url_for('admin.cancel_section', section_id=section.section_id) }}" 
+                      onsubmit="return confirm('Cancel section {{ section.section_number }}? Students will be notified.')">
+                    <button type="submit" class="btn btn-warning w-100 mt-2">
+                        <i class="fas fa-ban"></i> Cancel Section
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Timetables for this section -->
+<div class="card mt-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="fas fa-clock"></i> Timetable Schedule</h5>
+    </div>
+    <div class="card-body">
+        {# section.timetables is already a list - no .all() needed #}
+        {% if section.timetables %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Classroom</th>
+                        <th>Building</th>
+                        <th>Pattern</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tt in section.timetables %}
+                    <tr>
+                        <td>
+                            {% if tt.day_of_week == 0 %}Monday
+                            {% elif tt.day_of_week == 1 %}Tuesday
+                            {% elif tt.day_of_week == 2 %}Wednesday
+                            {% elif tt.day_of_week == 3 %}Thursday
+                            {% elif tt.day_of_week == 4 %}Friday
+                            {% elif tt.day_of_week == 5 %}Saturday
+                            {% else %}Sunday
+                            {% endif %}
+                        </div>
+                        <td>{{ tt.start_time.strftime('%H:%M') if tt.start_time else '-' }}</div>
+                        <td>{{ tt.end_time.strftime('%H:%M') if tt.end_time else '-' }}</div>
+                        <td>{{ tt.classroom.room_number if tt.classroom else '-' }}</div>
+                        <td>{{ tt.classroom.building if tt.classroom else '-' }}</div>
+                        <td>{{ tt.week_pattern }}</div>
+                        <td>
+                            <a href="{{ url_for('admin.edit_timetable', timetable_id=tt.timetable_id) }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('admin.delete_timetable', timetable_id=tt.timetable_id) }}" 
+                                  style="display:inline;" 
+                                  onsubmit="return confirm('Delete this timetable entry?')">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center">No timetable entries for this section.</p>
+        {% endif %}
+        
+        <div class="text-center mt-3">
+            <a href="{{ url_for('admin.manage_timetables') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Timetable Entry
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Registrations for this section -->
+<div class="card mt-4">
+    <div class="card-header bg-warning text-white">
+        <h5 class="mb-0"><i class="fas fa-users"></i> Enrolled Students ({{ section.registrations|length }})</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Number</th>
+                        <th>Student Name</th>
+                        <th>Major</th>
+                        <th>Registration Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in section.registrations %}
+                    <tr>
+                        <td>{{ reg.student.student_id }}</td>
+                        <td>{{ reg.student.student_number }}</td>
+                        <td>{{ reg.student.user.full_name if reg.student.user else '-' }}</td>
+                        <td>{{ reg.student.major_obj.major_name if reg.student.major_obj else '-' }}</td>
+                        <td>{{ reg.registration_date.strftime('%Y-%m-%d') if reg.registration_date else '-' }}</td>
+                        <td>
+                            <span class="badge {% if reg.status == 'enrolled' %}bg-success{% elif reg.status == 'completed' %}bg-info{% else %}bg-danger{% endif %}">
+                                {{ reg.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">No students enrolled in this section.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.card-header {
+    font-weight: bold;
+}
+</style>
+{% endblock %}

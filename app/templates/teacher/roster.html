@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-users"></i> Class Roster: 
+        {{ section.course.course_code }} - {{ section.course.title }}
+        <small class="text-muted">Section {{ section.section_number }}</small>
+    </h1>
+    <div>
+        <a href="{{ url_for('teacher.enter_grades', section_id=section.section_id) }}" class="btn btn-success">
+            <i class="fas fa-edit"></i> Enter Grades
+        </a>
+        <a href="{{ url_for('teacher.manage_attendance', section_id=section.section_id) }}" class="btn btn-info">
+            <i class="fas fa-calendar-check"></i> Attendance
+        </a>
+        <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Schedule Info Card -->
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Section Schedule</h5>
+    </div>
+    <div class="card-body">
+        {% set timetables = section.timetables %}
+        {% if timetables and timetables|length > 0 %}
+            <div class="row">
+                {% for tt in timetables %}
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center p-2">
+                            <strong>
+                                {% if tt.day_of_week == 0 %}Monday
+                                {% elif tt.day_of_week == 1 %}Tuesday
+                                {% elif tt.day_of_week == 2 %}Wednesday
+                                {% elif tt.day_of_week == 3 %}Thursday
+                                {% elif tt.day_of_week == 4 %}Friday
+                                {% elif tt.day_of_week == 5 %}Saturday
+                                {% else %}Sunday
+                                {% endif %}
+                            </strong><br>
+                            {{ tt.start_time.strftime('%I:%M %p') }} - {{ tt.end_time.strftime('%I:%M %p') }}<br>
+                            <span class="text-muted">{{ tt.classroom.room_number if tt.classroom else 'No Room' }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">No schedule assigned for this section yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ registrations|length }}</h3>
+                <p class="mb-0">Enrolled Students</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>{{ section.capacity }}</h3>
+                <p class="mb-0">Total Capacity</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>{{ section.capacity - registrations|length }}</h3>
+                <p class="mb-0">Available Seats</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body text-center">
+                <h3>{{ (registrations|length / section.capacity * 100)|round(1) }}%</h3>
+                <p class="mb-0">Utilization</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Student ID</th>
+                        <th>Student Number</th>
+                        <th>Student Name</th>
+                        <th>Major</th>
+                        <th>Enrollment Date</th>
+                        <th>Status</th>
+                        <th>Attendance %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in registrations %}
+                    {# FIX: Use |length filter instead of .count() #}
+                    {% set total_attendance = reg.attendance_records|length %}
+                    {% set present_count = reg.attendance_records|selectattr('status', 'equalto', 'present')|list|length %}
+                    {% set percent = (present_count / total_attendance * 100)|round(1) if total_attendance > 0 else 0 %}
+                    <tr id="row-{{ reg.registration_id }}">
+                        <td class="text-center">{{ loop.index }}</td>
+                        <td>{{ reg.student.student_id }}</td>
+                        <td>{{ reg.student.student_number }}</td>
+                        <td><strong>{{ reg.student.user.full_name }}</strong></td>
+                        <td>{{ reg.student.major_obj.major_name if reg.student.major_obj else 'Undeclared' }}</td>
+                        <td>{{ reg.registration_date.strftime('%Y-%m-%d') if reg.registration_date else 'N/A' }}</td>
+                        <td><span class="badge bg-success">Enrolled</span></td>
+                        <td class="text-center">
+                            <div class="progress" style="height: 6px; width: 60px; display: inline-block;">
+                                <div class="progress-bar {% if percent >= 75 %}bg-success{% elif percent >= 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                     style="width: {{ percent }}%;"></div>
+                            </div>
+                            <span class="ms-1">{{ percent }}%</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr id="no-data-row">
+                        <td colspan="8" class="text-center">No students enrolled in this section.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit"></i> Edit Course: {{ course.course_code }}</h1>
+    <div>
+        <a href="{{ url_for('dept_admin.manage_courses') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Courses
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Course Code *</label>
+                    <input type="text" name="course_code" class="form-control" value="{{ course.course_code }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Credits *</label>
+                    <input type="number" name="credits" class="form-control" value="{{ course.credits }}" required>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Course Title *</label>
+                <input type="text" name="title" class="form-control" value="{{ course.title }}" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="4">{{ course.description or '' }}</textarea>
+            </div>
+            
+            <div class="alert alert-info">
+                <strong>Department:</strong> {{ department.department_name }}<br>
+                <strong>Course ID:</strong> {{ course.course_id }}
+            </div>
+            
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Update Course
+                </button>
+                <a href="{{ url_for('dept_admin.manage_courses') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

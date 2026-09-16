@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-user-plus"></i> Create New User</h1>
+    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Users
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">First Name *</label>
+                    <input type="text" name="first_name" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Last Name *</label>
+                    <input type="text" name="last_name" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Username *</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Email *</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Password *</label>
+                <input type="password" name="password" class="form-control" required>
+                <small class="text-muted">Minimum 6 characters</small>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Role *</label>
+                <select name="role" id="role" class="form-control" required>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            
+            <!-- Admin Type (only visible when Admin is selected) -->
+            <div class="mb-3" id="adminTypeDiv" style="display: none;">
+                <label class="form-label">Admin Type</label>
+                <select name="admin_type" class="form-control">
+                    <option value="super_admin">Super Admin</option>
+                    <option value="department_admin">Department Admin</option>
+                </select>
+            </div>
+            
+            <!-- Department Admin Fields -->
+            <div id="departmentAdminFields" style="display: none;">
+                <div class="card mt-3">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0"><i class="fas fa-building"></i> Department Admin Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Department *</label>
+                            <select name="department_id" class="form-control">
+                                <option value="">-- Select Department --</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.department_id }}">{{ dept.department_name }} ({{ dept.department_code }})</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Select the department this admin will manage</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Student Fields -->
+            <div id="studentFields" style="display: none;">
+                <div class="card mt-3">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">Student Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Major</label>
+                                <select name="major_id" class="form-control">
+                                    <option value="">-- Select Major --</option>
+                                    {% for major in majors %}
+                                    <option value="{{ major.major_id }}">{{ major.major_name }} ({{ major.major_code }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Date of Birth</label>
+                                <input type="date" name="date_of_birth" class="form-control">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label>Phone Number</label>
+                            <input type="text" name="phone_number" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Teacher Fields -->
+            <div id="teacherFields" style="display: none;">
+                <div class="card mt-3">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">Teacher Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Department</label>
+                                <select name="teacher_dept_id" class="form-control">
+                                    <option value="">-- Select Department --</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept.department_id }}">{{ dept.department_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Title</label>
+                                <select name="title" class="form-control">
+                                    <option value="Instructor">Instructor</option>
+                                    <option value="Assistant Professor">Assistant Professor</option>
+                                    <option value="Associate Professor">Associate Professor</option>
+                                    <option value="Professor">Professor</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Major/Specialization</label>
+                                <select name="teacher_major_id" class="form-control">
+                                    <option value="">-- Select Major --</option>
+                                    {% for major in majors %}
+                                    <option value="{{ major.major_id }}">{{ major.major_name }} ({{ major.major_code }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Date of Birth</label>
+                                <input type="date" name="teacher_dob" class="form-control">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Office Location</label>
+                                <input type="text" name="office_location" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Office Phone</label>
+                                <input type="text" name="office_phone" class="form-control">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label>Research Area</label>
+                            <input type="text" name="research_area" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>Certifications</label>
+                            <textarea name="certifications" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label>Education</label>
+                            <textarea name="education" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                       
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg px-5">
+                    <i class="fas fa-save"></i> Create User
+                </button>
+                <a href="{{ url_for('admin.manage_users') }}" class="btn btn-secondary btn-lg px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Show/hide fields based on role selection
+    document.getElementById('role').addEventListener('change', function() {
+        const role = this.value;
+        const studentFields = document.getElementById('studentFields');
+        const teacherFields = document.getElementById('teacherFields');
+        const adminTypeDiv = document.getElementById('adminTypeDiv');
+        const departmentAdminFields = document.getElementById('departmentAdminFields');
+        
+        // Hide all first
+        studentFields.style.display = 'none';
+        teacherFields.style.display = 'none';
+        adminTypeDiv.style.display = 'none';
+        departmentAdminFields.style.display = 'none';
+        
+        if (role === 'student') {
+            studentFields.style.display = 'block';
+        } else if (role === 'teacher') {
+            teacherFields.style.display = 'block';
+        } else if (role === 'admin') {
+            adminTypeDiv.style.display = 'block';
+            // Check if department admin is selected
+            const adminType = document.querySelector('select[name="admin_type"]').value;
+            if (adminType === 'department_admin') {
+                departmentAdminFields.style.display = 'block';
+            }
+        }
+    });
+    
+    // Show/hide department admin fields based on admin type selection
+    document.querySelector('select[name="admin_type"]').addEventListener('change', function() {
+        const departmentAdminFields = document.getElementById('departmentAdminFields');
+        if (this.value === 'department_admin') {
+            departmentAdminFields.style.display = 'block';
+        } else {
+            departmentAdminFields.style.display = 'none';
+        }
+    });
+    
+    // Trigger change event on page load
+    document.getElementById('role').dispatchEvent(new Event('change'));
+</script>
+{% endblock %}

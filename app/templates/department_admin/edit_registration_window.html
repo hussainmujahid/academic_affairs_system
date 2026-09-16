@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit"></i> Edit Registration Window</h1>
+    <a href="{{ url_for('dept_admin.manage_registration_windows') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label>Semester</label>
+                <select name="semester_id" class="form-control" required>
+                    <option value="">Select Semester</option>
+                    {% for semester in semesters %}
+                    <option value="{{ semester.semester_id }}" {% if window.semester_id == semester.semester_id %}selected{% endif %}>
+                        {{ semester.semester_name }} {{ semester.year }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label>Window Name</label>
+                <input type="text" name="window_name" class="form-control" value="{{ window.window_name }}" required>
+            </div>
+            <div class="mb-3">
+                <label>Start Date/Time</label>
+                <input type="datetime-local" name="start_datetime" class="form-control" 
+                       value="{{ window.start_datetime.strftime('%Y-%m-%dT%H:%M') if window.start_datetime else '' }}" required>
+            </div>
+            <div class="mb-3">
+                <label>End Date/Time</label>
+                <input type="datetime-local" name="end_datetime" class="form-control" 
+                       value="{{ window.end_datetime.strftime('%Y-%m-%dT%H:%M') if window.end_datetime else '' }}" required>
+            </div>
+            <div class="mb-3">
+                <label>Priority</label>
+                <select name="priority" class="form-control">
+                    <option value="1" {% if window.priority == 1 %}selected{% endif %}>1 - Highest</option>
+                    <option value="2" {% if window.priority == 2 %}selected{% endif %}>2 - Medium</option>
+                    <option value="3" {% if window.priority == 3 %}selected{% endif %}>3 - Lowest</option>
+                </select>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Update Window</button>
+                <a href="{{ url_for('dept_admin.manage_registration_windows') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

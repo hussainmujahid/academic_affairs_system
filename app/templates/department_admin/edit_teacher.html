@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit"></i> Edit Teacher: {{ teacher.user.full_name }}</h1>
+    <div>
+        <a href="{{ url_for('dept_admin.manage_teachers') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Teachers
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label>First Name *</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ teacher.user.first_name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Last Name *</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ teacher.user.last_name }}" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Email *</label>
+                        <input type="email" name="email" class="form-control" value="{{ teacher.user.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>New Password (leave blank to keep current)</label>
+                        <input type="password" name="password" class="form-control">
+                        <small>Enter new password to change it (minimum 6 characters)</small>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label>Title</label>
+                            <select name="title" class="form-control">
+                                <option value="Instructor" {% if teacher.title == 'Instructor' %}selected{% endif %}>Instructor</option>
+                                <option value="Assistant Professor" {% if teacher.title == 'Assistant Professor' %}selected{% endif %}>Assistant Professor</option>
+                                <option value="Associate Professor" {% if teacher.title == 'Associate Professor' %}selected{% endif %}>Associate Professor</option>
+                                <option value="Professor" {% if teacher.title == 'Professor' %}selected{% endif %}>Professor</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Date of Birth</label>
+                            <input type="date" name="teacher_dob" class="form-control" value="{{ teacher.date_of_birth.strftime('%Y-%m-%d') if teacher.date_of_birth else '' }}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label>Major/Specialization</label>
+                            <select name="teacher_major_id" class="form-control">
+                                <option value="">-- Select Major --</option>
+                                {% for major in majors %}
+                                <option value="{{ major.major_id }}" {% if teacher.major_id == major.major_id %}selected{% endif %}>
+                                    {{ major.major_name }} ({{ major.major_code }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Office Location</label>
+                            <input type="text" name="office_location" class="form-control" value="{{ teacher.office_location or '' }}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label>Office Phone</label>
+                            <input type="text" name="office_phone" class="form-control" value="{{ teacher.office_phone or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Research Area</label>
+                            <input type="text" name="research_area" class="form-control" value="{{ teacher.research_area or '' }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Certifications</label>
+                        <textarea name="certifications" class="form-control" rows="2">{{ teacher.certifications or '' }}</textarea>
+                        <small>List certifications, one per line</small>
+                    </div>
+                    <div class="mb-3">
+                        <label>Education</label>
+                        <textarea name="education" class="form-control" rows="3">{{ teacher.education or '' }}</textarea>
+                        <small>Educational background, degrees, institutions</small>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Department:</strong> {{ department.department_name }}<br>
+                        <strong>Employee Number:</strong> {{ teacher.employee_number }}<br>
+                        <strong>Username:</strong> {{ teacher.user.username if teacher.user else 'N/A' }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Teacher</button>
+                    <a href="{{ url_for('dept_admin.manage_teachers') }}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Danger Zone</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('dept_admin.delete_teacher', teacher_id=teacher.teacher_id) }}" 
+                      onsubmit="return confirm('Delete teacher {{ teacher.user.full_name }}? This action cannot be undone.')">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fas fa-trash"></i> Delete Teacher
+                    </button>
+                </form>
+                <small class="text-muted mt-2 d-block">
+                    <i class="fas fa-info-circle"></i> Teacher cannot be deleted if they have assigned sections.
+                </small>
+            </div>
+        </div>
+        
+        <!-- Teaching Summary Card -->
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chalkboard"></i> Teaching Summary</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Current Sections:</strong> {{ teacher.sections|length }}</p>
+                <p><strong>Total Students:</strong> 
+                    {% set total = 0 %}
+                    {% for section in teacher.sections %}
+                        {% set total = total + section.enrolled_count %}
+                    {% endfor %}
+                    {{ total }}
+                </p>
+                <hr>
+                <a href="{{ url_for('dept_admin.view_teacher', teacher_id=teacher.teacher_id) }}" class="btn btn-outline-info w-100">
+                    <i class="fas fa-eye"></i> View Full Teacher Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

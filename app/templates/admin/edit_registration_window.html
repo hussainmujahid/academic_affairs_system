@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit"></i> Edit Registration Window</h1>
+    <a href="{{ url_for('admin.manage_registration_windows') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Registration Windows
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Semester *</label>
+                    <select name="semester_id" class="form-control" required>
+                        <option value="">Select Semester</option>
+                        {% for semester in semesters %}
+                        <option value="{{ semester.semester_id }}" {% if window.semester_id == semester.semester_id %}selected{% endif %}>
+                            {{ semester.semester_name }} ({{ semester.semester_code }})
+                            {% if semester.is_active %} - ACTIVE{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Window Name *</label>
+                    <input type="text" name="window_name" class="form-control" value="{{ window.window_name }}" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Start Date/Time *</label>
+                    <input type="datetime-local" name="start_datetime" class="form-control" 
+                           value="{{ window.start_datetime.strftime('%Y-%m-%dT%H:%M') if window.start_datetime else '' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">End Date/Time *</label>
+                    <input type="datetime-local" name="end_datetime" class="form-control" 
+                           value="{{ window.end_datetime.strftime('%Y-%m-%dT%H:%M') if window.end_datetime else '' }}" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Priority</label>
+                <select name="priority" class="form-control">
+                    <option value="0" {% if window.priority == 0 %}selected{% endif %}>0 - Normal</option>
+                    <option value="1" {% if window.priority == 1 %}selected{% endif %}>1 - High (Early Registration)</option>
+                    <option value="2" {% if window.priority == 2 %}selected{% endif %}>2 - Higher</option>
+                    <option value="3" {% if window.priority == 3 %}selected{% endif %}>3 - Highest</option>
+                </select>
+                <small class="text-muted">Higher priority windows appear first. Students with higher priority can register earlier.</small>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i> 
+                <strong>Window Status:</strong>
+                {% set now = datetime.utcnow() %}
+                {% if window.start_datetime and window.end_datetime %}
+                    {% if window.start_datetime <= now and window.end_datetime >= now %}
+                        <span class="badge bg-success">Active</span>
+                    {% elif window.end_datetime < now %}
+                        <span class="badge bg-secondary">Expired</span>
+                    {% else %}
+                        <span class="badge bg-info">Upcoming</span>
+                    {% endif %}
+                {% else %}
+                    <span class="badge bg-secondary">Invalid Dates</span>
+                {% endif %}
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg px-5">
+                    <i class="fas fa-save"></i> Update Window
+                </button>
+                <a href="{{ url_for('admin.manage_registration_windows') }}" class="btn btn-secondary btn-lg px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Current Window Info -->
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Current Window Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Window ID:</strong> {{ window.window_id }}</p>
+                <p><strong>Window Name:</strong> {{ window.window_name }}</p>
+                <p><strong>Semester:</strong> {{ window.semester.semester_name if window.semester else 'N/A' }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Start Date:</strong> {{ window.start_datetime.strftime('%Y-%m-%d %H:%M') if window.start_datetime else 'N/A' }}</p>
+                <p><strong>End Date:</strong> {{ window.end_datetime.strftime('%Y-%m-%d %H:%M') if window.end_datetime else 'N/A' }}</p>
+                <p><strong>Priority:</strong> {{ window.priority }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-user-circle"></i> My Profile</h1>
+    <div>
+        <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-id-card"></i> Personal Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-user-circle fa-5x text-primary"></i>
+                    <h3 class="mt-2">{{ teacher.user.full_name }}</h3>
+                    <span class="badge bg-info">{{ teacher.title or 'Instructor' }}</span>
+                </div>
+                <hr>
+                <p><strong>Employee Number:</strong> {{ teacher.employee_number }}</p>
+                <p><strong>Username:</strong> {{ teacher.user.username }}</p>
+                <p><strong>Email:</strong> {{ teacher.user.email }}</p>
+                <p><strong>Date of Birth:</strong> {{ teacher.date_of_birth.strftime('%Y-%m-%d') if teacher.date_of_birth else '-' }}</p>
+                <p><strong>Hire Date:</strong> {{ teacher.hire_date.strftime('%Y-%m-%d') if teacher.hire_date else '-' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-briefcase"></i> Professional Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Department:</strong> {{ teacher.department.department_name if teacher.department else 'Not Assigned' }}</p>
+                <p><strong>Major/Specialization:</strong> 
+                    {% if teacher.major_obj %}
+                        {{ teacher.major_obj.major_name }}
+                        <small class="text-muted d-block">({{ teacher.major_obj.major_code }})</small>
+                    {% else %}
+                        -
+                    {% endif %}
+                </p>
+                <p><strong>Research Area:</strong> {{ teacher.research_area or '-' }}</p>
+                <p><strong>Office Location:</strong> {{ teacher.office_location or '-' }}</p>
+                <p><strong>Office Phone:</strong> {{ teacher.office_phone or '-' }}</p>
+                <p><strong>Years of Service:</strong> 
+                    {% if teacher.hire_date %}
+                        {% set hire_date = teacher.hire_date %}
+                        {% set today = now %}
+                        {% set years = ((today - hire_date).days / 365)|int %}
+                        {{ years }} year(s)
+                    {% else %}
+                        -
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-graduation-cap"></i> Qualifications</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Education:</strong></p>
+                <div class="alert alert-light">
+                    {{ teacher.education or 'No education information provided.' }}
+                </div>
+                <p><strong>Certifications:</strong></p>
+                <div class="alert alert-light">
+                    {{ teacher.certifications or 'No certifications listed.' }}
+                </div>
+                {% if teacher.publications %}
+                <p><strong>Publications:</strong></p>
+                <div class="alert alert-light">
+                    {{ teacher.publications }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

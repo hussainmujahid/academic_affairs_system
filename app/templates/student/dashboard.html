@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-0"><i class="fas fa-user-graduate text-primary"></i> Student Dashboard</h1>
+        <p class="text-muted mt-1">Welcome back to your academic portal</p>
+    </div>
+    <div>
+        <span class="badge bg-primary fs-6 me-1">{{ student.user.full_name }}</span>
+        <span class="badge bg-secondary fs-6">{{ student.student_number }}</span>
+        
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Current Courses</h6>
+                        <h2 class="mb-0">{{ registrations|length }}</h2>
+                    </div>
+                    <i class="fas fa-book fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Total Credits</h6>
+                        <h2 class="mb-0">{{ total_credits }}</h2>
+                    </div>
+                    <i class="fas fa-certificate fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">GPA</h6>
+                        <h2 class="mb-0">{{ "%.2f"|format(student.gpa|float) }}</h2>
+                    </div>
+                    <i class="fas fa-chart-line fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Completed Credits</h6>
+                        <h2 class="mb-0">{{ student.total_credits or 0 }}</h2>
+                    </div>
+                    <i class="fas fa-trophy fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Schedule -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> My Current Schedule</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if registrations %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 12%">Course Code</th>
+                        <th style="width: 28%">Course Title</th>
+                        <th style="width: 8%" class="text-center">Credits</th>
+                        <th style="width: 8%" class="text-center">Section</th>
+                        <th style="width: 15%">Schedule</th>
+                        <th style="width: 10%">Room</th>
+                        <th style="width: 15%">Instructor</th>
+                        <th style="width: 10%" class="text-center">Action</th>
+                    </thead>
+                </thead>
+                <tbody>
+                    {% for reg in registrations %}
+                    {% set section = reg.section %}
+                    {% set timetables = section.timetables %}
+                    <tr id="reg-row-{{ reg.registration_id }}">
+                        <td><strong class="text-primary">{{ section.course.course_code }}</strong></td>
+                        <td>{{ section.course.title[:50] }}{% if section.course.title|length > 50 %}...{% endif %}</td>
+                        <td class="text-center"><span class="badge bg-info">{{ section.course.credits }}</span></td>
+                        <td class="text-center">Section {{ section.section_number }}</div>
+                        <td>
+                            {% if timetables %}
+                                {% for tt in timetables %}
+                                    <span class="badge bg-info d-block mb-1">
+                                        {% if tt.day_of_week == 0 %}Mon
+                                        {% elif tt.day_of_week == 1 %}Tue
+                                        {% elif tt.day_of_week == 2 %}Wed
+                                        {% elif tt.day_of_week == 3 %}Thu
+                                        {% elif tt.day_of_week == 4 %}Fri
+                                        {% endif %}
+                                        {{ tt.start_time.strftime('%I:%M %p') }}-{{ tt.end_time.strftime('%I:%M %p') }}
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">Schedule TBA</span>
+                            {% endif %}
+                        </div>
+                        <td>
+                            {% if timetables %}
+                                {% for tt in timetables %}
+                                    <span class="badge bg-secondary d-block mb-1">{{ tt.classroom.room_number if tt.classroom else 'TBA' }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">Room TBA</span>
+                            {% endif %}
+                        </div>
+                        <td>
+                            {{ section.teacher.user.full_name if section.teacher and section.teacher.user else 'TBA' }}
+                        </div>
+                        <td class="text-center">
+                            <form method="POST" action="{{ url_for('student.withdraw_course', registration_id=reg.registration_id) }}" 
+                                  style="display:inline;" 
+                                  onsubmit="return confirm('Withdraw from {{ section.course.course_code }}?')">
+                                <button type="submit" class="btn btn-sm btn-danger" title="Withdraw">
+                                    <i class="fas fa-times-circle"></i> Withdraw
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-calendar-alt fa-4x text-muted mb-3 d-block"></i>
+            <h5 class="text-muted">No Courses Registered</h5>
+            <p class="text-muted">You haven't registered for any courses yet.</p>
+            <a href="{{ url_for('student.available_courses') }}" class="btn btn-primary mt-2">
+                <i class="fas fa-plus-circle"></i> Browse Courses
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% if registrations %}
+    <div class="card-footer bg-transparent">
+        <a href="{{ url_for('student.available_courses') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> Register for More Courses
+        </a>
+        <a href="{{ url_for('student.view_timetable') }}" class="btn btn-info ms-2">
+            <i class="fas fa-calendar-alt"></i> View Weekly Schedule
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recent Grades -->
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="fas fa-award"></i> Recent Grades</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if completed_grades %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 30%">Course</th>
+                        <th style="width: 10%" class="text-center">Credits</th>
+                        <th style="width: 15%" class="text-center">Regular (30%)</th>
+                        <th style="width: 15%" class="text-center">Final (70%)</th>
+                        <th style="width: 15%" class="text-center">Overall Grade</th>
+                        <th style="width: 15%" class="text-center">Letter</th>
+                    </thead>
+                </thead>
+                <tbody>
+                    {% for reg in completed_grades %}
+                    <tr id="grade-row-{{ reg.registration_id }}">
+                        <td>
+                            <strong class="text-primary">{{ reg.section.course.course_code }}</strong><br>
+                            <small class="text-muted">{{ reg.section.course.title[:40] }}</small>
+                        </div>
+                        <td class="text-center"><span class="badge bg-info">{{ reg.section.course.credits }}</span></div>
+                        <td class="text-center">{{ reg.regular_grade or 'N/A' }}</div>
+                        <td class="text-center">{{ reg.final_grade or 'N/A' }}</div>
+                        <td class="text-center fw-bold">{{ reg.grade or 'N/A' }}</div>
+                        <td class="text-center">
+                            {% if reg.grade %}
+                                {% if reg.grade >= 90 %}
+                                    <span class="badge bg-success">A</span>
+                                {% elif reg.grade >= 80 %}
+                                    <span class="badge bg-primary">B</span>
+                                {% elif reg.grade >= 70 %}
+                                    <span class="badge bg-info">C</span>
+                                {% elif reg.grade >= 60 %}
+                                    <span class="badge bg-warning">D</span>
+                                {% else %}
+                                    <span class="badge bg-danger">F</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">Pending</span>
+                            {% endif %}
+                        </div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-chart-line fa-4x text-muted mb-3 d-block"></i>
+            <h5 class="text-muted">No Grades Available</h5>
+            <p class="text-muted">Complete your courses to see your grades here.</p>
+        </div>
+        {% endif %}
+    </div>
+    {% if completed_grades %}
+    <div class="card-footer bg-transparent">
+        <a href="{{ url_for('student.grades') }}" class="btn btn-outline-info">
+            <i class="fas fa-chart-line"></i> View All Grades
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.table-hover tbody tr:hover {
+    background-color: rgba(30, 60, 114, 0.05);
+    transition: all 0.2s ease;
+}
+.btn {
+    transition: all 0.2s ease;
+}
+.btn:hover {
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}

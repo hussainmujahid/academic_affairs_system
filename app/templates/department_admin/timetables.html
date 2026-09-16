@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-0"><i class="fas fa-clock text-primary"></i> Timetable Management</h1>
+        <p class="text-muted mt-1">Manage class schedules for sections in {{ department.department_name }}</p>
+    </div>
+    <div>
+        <a href="{{ url_for('dept_admin.manage_timetables_create_form') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Schedule
+        </a>
+        <a href="{{ url_for('dept_admin.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if timetables %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                        <th style="width: 15%">Course</th>
+                        <th style="width: 8%" class="text-center">Section</th>
+                        <th style="width: 10%">Teacher</th>
+                        <th style="width: 10%">Day</th>
+                        <th style="width: 10%">Start Time</th>
+                        <th style="width: 10%">End Time</th>
+                        <th style="width: 12%">Classroom</th>
+                        <th style="width: 8%">Pattern</th>
+                        <th style="width: 8%">Status</th>
+                        <th style="width: 15%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tt in timetables %}
+                    <tr id="tt-row-{{ tt.timetable_id }}">
+                        <td>
+                            <strong>{{ tt.section.course.course_code }}</strong><br>
+                            <small>{{ tt.section.course.title[:30] }}</small>
+                        </div>
+                        <td class="text-center fw-bold">Section {{ tt.section.section_number }}</div>
+                        <td class="text-center">
+                            {% if tt.section.teacher %}
+                                {{ tt.section.teacher.user.full_name if tt.section.teacher.user else tt.section.teacher.employee_number }}
+                            {% else %}
+                                <span class="text-muted">Not Assigned</span>
+                            {% endif %}
+                        </div>
+                        <td>
+                            {% if tt.day_of_week == 0 %}Monday
+                            {% elif tt.day_of_week == 1 %}Tuesday
+                            {% elif tt.day_of_week == 2 %}Wednesday
+                            {% elif tt.day_of_week == 3 %}Thursday
+                            {% elif tt.day_of_week == 4 %}Friday
+                            {% elif tt.day_of_week == 5 %}Saturday
+                            {% else %}Sunday
+                            {% endif %}
+                        </div>
+                        <td>{{ tt.start_time.strftime('%I:%M %p') }}</div>
+                        <td>{{ tt.end_time.strftime('%I:%M %p') }}</div>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ tt.classroom.room_number if tt.classroom else 'Not Assigned' }}
+                            </span>
+                        </div>
+                        <td>
+                            <span class="badge {% if tt.week_pattern == 'weekly' %}bg-primary{% else %}bg-info{% endif %}">
+                                {{ tt.week_pattern }}
+                            </span>
+                        </div>
+                        <td>
+                            {% if tt.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </div>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('dept_admin.edit_timetable', timetable_id=tt.timetable_id) }}" class="btn btn-sm btn-warning" title="Edit Schedule">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <form method="POST" action="{{ url_for('dept_admin.toggle_timetable', timetable_id=tt.timetable_id) }}" 
+                                      style="display:inline;">
+                                    <button type="submit" class="btn btn-sm {% if tt.is_active %}btn-secondary{% else %}btn-success{% endif %}" 
+                                            title="{% if tt.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                        <i class="fas {% if tt.is_active %}fa-pause{% else %}fa-play{% endif %}"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('dept_admin.delete_timetable', timetable_id=tt.timetable_id) }}" 
+                                      style="display:inline;" 
+                                      onsubmit="return confirm('Delete this schedule?')">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete Schedule">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-clock fa-4x text-muted mb-3 d-block"></i>
+            <h5 class="text-muted">No Timetable Entries</h5>
+            <p class="text-muted">No class schedules have been created yet.</p>
+            <a href="{{ url_for('dept_admin.manage_timetables_create_form') }}" class="btn btn-primary mt-2">
+                <i class="fas fa-plus"></i> Create First Schedule
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

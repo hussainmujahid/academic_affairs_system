@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit"></i> Edit Department: {{ dept.department_name }}</h1>
+    <a href="{{ url_for('admin.manage_departments') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Departments
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label>Department Code *</label>
+                <input type="text" name="department_code" class="form-control" value="{{ dept.department_code }}" required>
+            </div>
+            <div class="mb-3">
+                <label>Department Name *</label>
+                <input type="text" name="department_name" class="form-control" value="{{ dept.department_name }}" required>
+            </div>
+            <div class="mb-3">
+                <label>Dean</label>
+                <select name="dean_id" class="form-control">
+                    <option value="">-- Select Dean --</option>
+                    {% for teacher in teachers %}
+                    <option value="{{ teacher.teacher_id }}" {% if dept.dean_id == teacher.teacher_id %}selected{% endif %}>
+                        {{ teacher.user.full_name if teacher.user else 'Teacher ' + teacher.teacher_id|string }}
+                        {% if teacher.department %}
+                            (Dept: {{ teacher.department.department_name if teacher.department else teacher.department_id }})
+                        {% else %}
+                            (No Department Assigned)
+                        {% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small class="text-muted">Select a teacher to assign as department dean</small>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Update Department</button>
+                <a href="{{ url_for('admin.manage_departments') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Current Dean Info -->
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Current Dean Information</h5>
+    </div>
+    <div class="card-body">
+        {% if dept.dean %}
+            <p><strong>Name:</strong> {{ dept.dean.user.full_name if dept.dean.user else 'N/A' }}</p>
+            <p><strong>Employee ID:</strong> {{ dept.dean.employee_number }}</p>
+            <p><strong>Title:</strong> {{ dept.dean.title or 'Professor' }}</p>
+            <p><strong>Department:</strong> {{ dept.dean.department.department_name if dept.dean.department else 'Not Assigned' }}</p>
+        {% else %}
+            <p class="text-muted">No dean assigned to this department yet.</p>
+            <p>To assign a dean, select a teacher from the dropdown above and click Update.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Debug Info -->
+<div class="card mt-4">
+    <div class="card-header bg-warning">
+        <h5 class="mb-0"><i class="fas fa-bug"></i> Available Teachers</h5>
+    </div>
+    <div class="card-body">
+        <ul>
+            {% for teacher in teachers %}
+            <li>
+                <strong>ID:</strong> {{ teacher.teacher_id }} |
+                <strong>Name:</strong> {{ teacher.user.full_name if teacher.user else 'Unknown' }} |
+                <strong>Employee:</strong> {{ teacher.employee_number }} |
+                <strong>Department ID:</strong> {{ teacher.department_id or 'None' }}
+            </li>
+            {% else %}
+            <li>No teachers found. Please create teachers first.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

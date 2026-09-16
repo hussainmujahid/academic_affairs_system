@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-user-plus"></i> Add New Student</h1>
+    <div>
+        <a href="{{ url_for('dept_admin.manage_students') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Students
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">First Name *</label>
+                    <input type="text" name="first_name" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Last Name *</label>
+                    <input type="text" name="last_name" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email *</label>
+                <input type="email" name="email" class="form-control" required>
+                <small class="text-muted">Student's email address</small>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" name="date_of_birth" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" name="phone_number" class="form-control" placeholder="e.g., (555) 123-4567">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Enrollment Year</label>
+                    <input type="number" name="enrollment_year" class="form-control" value="{{ current_year }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Major *</label>
+                    <select name="major_id" class="form-control" required>
+                        <option value="">-- Select Major --</option>
+                        {% for major in majors %}
+                        <option value="{{ major.major_id }}">{{ major.major_name }} ({{ major.major_code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <strong>Auto-generated credentials:</strong><br>
+                <strong>Username:</strong> firstname (e.g., john)<br>
+                <strong>Password:</strong> firstname + 123 (e.g., john123)<br>
+                <strong>Student Number:</strong> Auto-generated (e.g., STU20260001)
+            </div>
+
+            <div class="alert alert-warning">
+                <i class="fas fa-info-circle"></i> <strong>Login Information:</strong>
+                <ul class="mb-0 mt-2">
+                    <li>Username: firstname (e.g., john)</li>
+                    <li>Password: firstname + 123 (e.g., john123)</li>
+                    <li>Student Number: Auto-generated</li>
+                    <li>Login URL: <code>http://localhost:5000/auth/login</code></li>
+                </ul>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg px-5">
+                    <i class="fas fa-save"></i> Create Student
+                </button>
+                <a href="{{ url_for('dept_admin.manage_students') }}" class="btn btn-secondary btn-lg px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
