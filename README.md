@@ -28,7 +28,3 @@ The database follows a normalized relational design (3NF) across 20 tables cover
 | Database | SQLite (development) |
 | Frontend | Bootstrap 5.1, Font Awesome 6, Jinja2 |
 | Forms / Flash | Flask-WTF ready (CSRF optional) |
-
----
-
-## Project Structure
